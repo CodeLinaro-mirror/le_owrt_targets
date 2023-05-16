@@ -1,4 +1,5 @@
 include $(TOPDIR)/owrt-qti-conf/sdx.mk
+include $(TOPDIR)/owrt-qti-ppat-prop/qtippatprop.mk
 
 define Profile/mbb-128m
 	NAME:=Qualcomm Technologies Inc., Kuno Profile
