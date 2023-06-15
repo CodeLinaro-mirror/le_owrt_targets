@@ -1,0 +1,30 @@
+include $(TOPDIR)/rules.mk
+
+ARCH:=arm
+BOARD:=sdx35
+BOARDNAME:=QTI sdx35
+FEATURES:=ubifs ramdisk nand
+CPU_TYPE:=cortex-a7
+CPU_SUBTYPE:=neon-vfpv4
+
+KERNELNAME:=zImage-dtb Image dtbs
+PATCH_EXTERNAL_KERNEL_TREE:=1
+
+DISABLE_KERNEL_BUILD:=1
+KERNEL_PLATFORM_TARGET:=sdxbaagha
+TARGET_VARIANT:=debug
+USB_COMPOSITION:=90B8
+UNAME_VERSION:=5.15
+KERNEL_PATCHVER:=5.15
+
+# add build flag for Kuno 128M variant
+BUILD_WITH_MEMOPT:=0
+LINUX_VERSION:=5.15
+
+KERNEL_DIST_DIR:=$(TOPDIR)/src/kernel-$(LINUX_VERSION)/out/msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig/dist
+BUILD_CONFIG_NAME:=build.config.msm.$(KERNEL_PLATFORM_TARGET)
+OUT_DIR_NAME:=msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig
+
+include $(INCLUDE_DIR)/target.mk
+
+$(eval $(call BuildTarget))

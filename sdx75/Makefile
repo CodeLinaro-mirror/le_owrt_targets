@@ -1,0 +1,27 @@
+include $(TOPDIR)/rules.mk
+
+ARCH:=aarch64
+BOARD:=sdx75
+BOARDNAME:=QTI sdx75
+FEATURES:=ubifs ramdisk nand
+CPU_TYPE:=cortex-a53
+
+KERNELNAME:=zImage-dtb Image dtbs
+PATCH_EXTERNAL_KERNEL_TREE:=1
+
+DISABLE_KERNEL_BUILD:=1
+KERNEL_PLATFORM_TARGET:=sdxpinn-cpe-wkk
+TARGET_VARIANT:=debug
+LINUX_VERSION:=5.15
+USB_COMPOSITION:=90DB
+USB_COMPOSITION_RECOVERY:=901D
+UNAME_VERSION:=5.15.78-debug-g75c2c33d0c9f
+KERNEL_PATCHVER:=5.15
+
+KERNEL_DIST_DIR:=$(TOPDIR)/src/kernel-$(LINUX_VERSION)/out/msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig/dist
+BUILD_CONFIG_NAME:=build.config.msm.$(KERNEL_PLATFORM_TARGET)
+OUT_DIR_NAME:=msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig
+
+include $(INCLUDE_DIR)/target.mk
+
+$(eval $(call BuildTarget))
