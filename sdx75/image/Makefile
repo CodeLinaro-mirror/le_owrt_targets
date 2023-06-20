@@ -29,7 +29,11 @@ else
 IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/root-$(BOARD)
 endif
 
+ifeq ($(USER_VARIANT),1)
+IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)
+else
 IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
+endif
 
 SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
