@@ -1,5 +1,6 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
+include generate-ubinize-cfg.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
@@ -7,6 +8,7 @@ UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
 USERDATA_SIZE_EXT4 = 251658240
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
+UBINIZE_CFG = ubinize-$(BOARD).cfg
 RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
 RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
 RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
@@ -16,6 +18,16 @@ CACHE_SIZE_EXT4 = 26214400
 ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
 endif
+
+
+SYSTEM_VOLUME_SIZE_G = "200MiB"
+SYSTEM_VOLUME_SIZE = "110MiB"
+ifeq ($(PROFILE),mbb-min)
+ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE)
+else
+ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
+endif
+
 
 ifeq ($(TARGET_VARIANT),perf)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf no_console_suspend=1 loglevel=0"
@@ -81,7 +93,6 @@ endef
 else
 
 define Image/mkfs/ubifs
-	$(CP) ./ubinize-$(BOARD).cfg $(KDIR)
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}/etc/uci-defaults/13_fix-group-user; \
@@ -89,6 +100,7 @@ define Image/mkfs/ubifs
 	cd $(KDIR); \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS) -o sysfs.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
+	$(call Image/Build/generate-ubinize-cfg)
 	( cd $(KDIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize \
 		-o sysfs.ubi -m 4096 -p 256KiB -s 4096 \
