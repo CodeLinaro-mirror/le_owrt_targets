@@ -31,6 +31,7 @@ define Profile/mbb
 		$(QTIWLAN) $(QTIWLANPROP) \
 		$(QTICOREINTERNAL) \
 		$(QTIPPATPROP) \
+		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
