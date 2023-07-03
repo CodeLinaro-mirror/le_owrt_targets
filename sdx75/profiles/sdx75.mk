@@ -74,7 +74,7 @@ define Profile/recovery
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTISENSORSPROP) \
                 -ipa_fws -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
-                -usb-composition usb-composition-recovery -initmss
+                -usb-composition usb-composition-recovery -initmss -sign_abl
 endef
 
 define Profile/recovery/Description
