@@ -68,7 +68,8 @@ define Profile/recovery
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
+		-usb-composition usb-composition-recovery -initmss -sign_abl
 endef
 
 define Profile/recovery/Description
