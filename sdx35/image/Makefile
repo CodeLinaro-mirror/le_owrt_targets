@@ -10,7 +10,7 @@ USERDATA_SIZE_EXT4 = 251658240
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
 RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
 RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
-RECOVERY_MKUBIFS_ARGS = -m 4096 -e 61440 -c 200 -F
+RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
 TARGET_SHA_TYPE = "sha256"
 
