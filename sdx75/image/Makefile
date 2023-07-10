@@ -13,7 +13,7 @@ RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
 RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
 RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
 RECOVERYFS_SIZE_EXT4 ?= 52428800
-CACHE_SIZE_EXT4 = 26214400
+CACHE_SIZE_EXT4 = 52428800
 
 ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
@@ -54,8 +54,15 @@ define Image/Prepare
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
+	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
 endef
+
+OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
+RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
+
+include ota-ext4.mk
+include ota-ubi.mk
 
 ifeq ($(PROFILE),recovery)
 
@@ -111,15 +118,14 @@ define Image/mkfs/ubifs
 	  $(CP) $(KDIR)/userfs.ubifs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-$(BOARD).cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
+	$(call Ota/Build/target-files-zip-ubi)
+	$(call Ota/Build/gen_ota_full_zip_ubi)
 endef
 
 define Image/mkfs/ext4
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}/etc/uci-defaults/13_fix-group-user; \
-	)
-	( cd $(IMAGE_PRODUCTS_DIR); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096 -s -l $(EXT4_IMAGE_SIZE) system.img $(IMAGE_ROOTFS) \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4) userdata.img $(IMAGE_ROOTFS)/data \
@@ -155,6 +161,15 @@ define Image/mkfs/ext4
 		mv -f boot.img.secure boot.img; \
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR); \
 	)
+	if [ $(CONFIG_OTA_RECOVERY_UPDATE) == y ]; then \
+		$(call Ota/Build/compute_sha1); \
+	fi
+	( cd $(IMAGE_PRODUCTS_DIR); \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096 -s -l $(EXT4_IMAGE_SIZE) system.img $(IMAGE_ROOTFS) \
+	)
+	$(call Ota/Build/releasetools-native)
+	$(call Ota/Build/target-files-zip-ext4)
+	$(call Ota/Build/gen_ota_full_zip_ext4)
 endef
 
 endif

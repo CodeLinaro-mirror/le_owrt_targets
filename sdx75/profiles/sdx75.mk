@@ -9,6 +9,10 @@ ifneq ($(EXTERNAL_BUILD),1)
 endif
 include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
 
+ifeq ($(CONFIG_OTA_RECOVERY_UPDATE),y)
+RECOVERYUPDATER=recovery-updater
+endif
+
 define Profile/mbb
 	NAME:=Qualcomm Technologies Inc., Pinnacles Profile
 	PACKAGES:=$(OPENWRT_STANDARD) \
@@ -20,7 +24,7 @@ define Profile/mbb
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
 		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSINTERNAL) $(QTISENSORSPROP) $(QTIMSDCPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef
 
 define Profile/mbb/Description
@@ -40,7 +44,7 @@ define Profile/cpe
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
 		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef
 
 define Profile/cpe/Description
@@ -58,7 +62,7 @@ define Profile/mbb-min
                 $(QTIDATA) $(QTIDATAPROP) $(QTIRILPROP) $(QTICTAINTERNAL) $(QTISSDK) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) $(QTISENSORSPROP) $(QTIMSDCPROP) \
-                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef
 
 define Profile/mbb-min/Description
@@ -74,7 +78,8 @@ define Profile/recovery
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTISENSORSPROP) \
                 -ipa_fws -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
-                -usb-composition usb-composition-recovery -initmss -sign_abl
+                -usb-composition usb-composition-recovery -initmss -sign_abl applypatch bsdiff-ota edify \
+                libdivsufsort librecovery-updater-msm minadbd recovery updater
 endef
 
 define Profile/recovery/Description
