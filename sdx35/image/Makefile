@@ -149,6 +149,7 @@ ifeq ($(PROFILE), mbb)
 	$(CP) ./ubinize-sdx35-ab.cfg $(KDIR)
 	$(CP) ./ubinize-sdx35-ab-2k.cfg $(KDIR)
 endif
+	$(CP) ./ubinize-sdx35-2k-squashfs.cfg $(KDIR)
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' $(IMAGE_ROOTFS)/etc/passwd; \
 		rm -rf $(IMAGE_ROOTFS)etc/uci-defaults/13_fix-group-user; \
@@ -158,8 +159,14 @@ endif
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS) -o sysfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35 -o sysfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOST)/bin/mksquashfs4 $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35 sysfs-2k.squashfs -noappend -comp xz -noI -b 64K -processors 1; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35 -o sysfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35/data -o userfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35/data -o userfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
 	( cd $(KDIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-2k.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-2k.cfg; \
+		fakeroot $(STAGING_DIR_HOST)/bin/ubinize -o sysfs-2k-squash.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-2k-squashfs.cfg; \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs.ubi -m 4096 -p 256KiB -s 4096 ubinize-sdx35.cfg; \
 	)
 	( if [ "$(PROFILE)" == "mbb-128m" ]; then \
@@ -170,13 +177,16 @@ endif
 	fi; \
 	)
 	( $(CP) $(KDIR)/sysfs-2k.ubifs $(IMAGE_PRODUCTS_DIR)/; \
+	  $(CP) $(KDIR)/sysfs-2k.squashfs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/sysfs-2k.ubi $(IMAGE_PRODUCTS_DIR)/; \
+	  $(CP) $(KDIR)/sysfs-2k-squash.ubi $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/sysfs.ubifs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/sysfs.ubi $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/userfs-2k.ubifs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/userfs.ubifs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-sdx35.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-sdx35-2k.cfg $(IMAGE_PRODUCTS_DIR)/; \
+	  $(CP) $(KDIR)/ubinize-sdx35-2k-squashfs.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
 	( if [ "$(PROFILE)" == "mbb" ]; then \
 	(cd $(TOPDIR); \
