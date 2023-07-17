@@ -127,10 +127,10 @@ define Ota/Build/target-files-zip-ext4
 	echo blocksize=131072 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
 
     # boot_size: Size of boot partition from partition.xml
-	echo boot_size=0x29020C0 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
+	echo boot_size=0x4600000 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
 
     # recovery_size : Size of recovery partition from partition.xml
-	echo recovery_size=0x03200000 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
+	echo recovery_size=0x4600000 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
 
     #system_size : Size of system partition from partition.xml
 	echo system_size=0x0D27D8C0 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
