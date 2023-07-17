@@ -41,16 +41,16 @@ define Image/AB/GenerateABRootfs
 	$(foreach pkg,$(shell cat ABPackages_Install),
 		echo "$(pkg)"; \
 		$(if $(shell find $(TOPDIR)/bin/packages/$(ARCH_PACKAGES) -iname \*$(pkg)\* | awk '{print $1}'), \
-			$(opkg_install_cmd) install $(shell find $(TOPDIR)/bin/packages/$(ARCH_PACKAGES) -iname \*$(pkg)\* | awk '{print $1}');) \
-		
-		IPKG_INSTROOT=$(IMAGE_ROOTFS_AB) $$(command -v bash) $(IMAGE_ROOTFS_AB)/usr/lib/opkg/info/$(pkg).postinst; \
+			$(opkg_install_cmd) install $(shell find $(TOPDIR)/bin/packages/$(ARCH_PACKAGES) -iname \*$(pkg)\* | awk '{print $1}');
 
-		$(foreach installed_file,$(shell cat $(IMAGE_ROOTFS_AB)/usr/lib/opkg/info/$(pkg).list),
-			if echo $(installed_file) | grep -q "init"; then \
-				echo "Eanbling init "; \
-				IPKG_INSTROOT=$(IMAGE_ROOTFS_AB) $$(command -v bash) $(IMAGE_ROOTFS_AB)/etc/rc.common $(IMAGE_ROOTFS_AB)/$(installed_file) enable; \
-			fi
-		)
+			IPKG_INSTROOT=$(IMAGE_ROOTFS_AB) $$(command -v bash) $(IMAGE_ROOTFS_AB)/usr/lib/opkg/info/$(pkg).postinst; \
+
+			$(foreach installed_file,$(shell cat $(IMAGE_ROOTFS_AB)/usr/lib/opkg/info/$(pkg).list),
+				if echo $(installed_file) | grep -q "init"; then \
+					echo "Eanbling init "; \
+					IPKG_INSTROOT=$(IMAGE_ROOTFS_AB) $$(command -v bash) $(IMAGE_ROOTFS_AB)/etc/rc.common $(IMAGE_ROOTFS_AB)/$(installed_file) enable; \
+				fi
+		) ) \
 	)
 	rm -rf $(IMAGE_ROOTFS_AB)/var/lock/*.lock
 
