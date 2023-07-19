@@ -9,6 +9,7 @@ ifneq ($(EXTERNAL_BUILD),1)
 	include $(TOPDIR)/owrt-qti-sensors-internal/qtisensorsinternal.mk
 endif
 include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
+include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
 
 ifeq ($(CONFIG_OTA_RECOVERY_UPDATE),y)
 RECOVERYUPDATER=recovery-updater
@@ -41,11 +42,12 @@ define Profile/cpe
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) \
-		$(QTIIPQPROP) $(QTISSDK) \
+		$(QTIIPQ) $(QTIIPQPROP) $(QTISSDK) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
 		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) $(QTIIPQEZMESH) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) \
+		-iw-full
 endef
 
 define Profile/cpe/Description
