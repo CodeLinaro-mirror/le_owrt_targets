@@ -1,11 +1,12 @@
 include $(TOPDIR)/owrt-qti-conf/sdx.mk
+include $(TOPDIR)/owrt-qti-ppat-prop/qtippatprop.mk
 
 define Profile/mbb-128m
 	NAME:=Qualcomm Technologies Inc., Kuno Profile
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		$(QTIDATA) $(QTIDATAPROP) $(QTINTERNAL) $(QTISSDK) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTINTERNAL) $(QTISSDK) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTICOREINTERNAL) \
 		$(QTIPPATPROP) \
@@ -31,6 +32,7 @@ define Profile/mbb
 		$(QTIWLAN) $(QTIWLANPROP) \
 		$(QTICOREINTERNAL) \
 		$(QTIPPATPROP) \
+		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
@@ -67,7 +69,8 @@ define Profile/recovery
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
+		-usb-composition usb-composition-recovery -initmss -sign_abl
 endef
 
 define Profile/recovery/Description

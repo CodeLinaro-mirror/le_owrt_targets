@@ -14,6 +14,7 @@ DISABLE_KERNEL_BUILD:=1
 KERNEL_PLATFORM_TARGET:=sdxbaagha
 TARGET_VARIANT:=debug
 USB_COMPOSITION:=90B8
+USB_COMPOSITION_RECOVERY:=901D
 UNAME_VERSION:=5.15
 KERNEL_PATCHVER:=5.15
 
@@ -24,6 +25,9 @@ LINUX_VERSION:=5.15
 KERNEL_DIST_DIR:=$(TOPDIR)/src/kernel-$(LINUX_VERSION)/out/msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig/dist
 BUILD_CONFIG_NAME:=build.config.msm.$(KERNEL_PLATFORM_TARGET)
 OUT_DIR_NAME:=msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig
+
+# add sectools v2 from sec component
+SEC_PATH:=$(TOPDIR)/src/vendor/qcom/proprietary/sectools/Linux
 
 include $(INCLUDE_DIR)/target.mk
 

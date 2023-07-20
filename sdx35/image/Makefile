@@ -10,7 +10,10 @@ USERDATA_SIZE_EXT4 = 251658240
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
 RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
 RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
-RECOVERY_MKUBIFS_ARGS = -m 4096 -e 61440 -c 200 -F
+RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
+RECOVERY_UBINIZE_CFG_2K = ubinize-recoveryfs-2k.cfg
+RECOVERY_UBIFS_IMAGE_2K = recoveryfs-2k.ubifs
+RECOVERY_MKUBIFS_ARGS_2K = -m 2048 -e 126976 -c 200 -F
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
 TARGET_SHA_TYPE = "sha256"
 
@@ -49,12 +52,25 @@ define Image/Build/ubifs
 		echo vol_type=dynamic >> $(RECOVERY_UBINIZE_CFG); \
 		echo vol_name=rootfs >> $(RECOVERY_UBINIZE_CFG); \
 		echo vol_flags = autoresize >> $(RECOVERY_UBINIZE_CFG); \
-		$(CP) ./$(RECOVERY_UBINIZE_CFG) $(KDIR) \
+		$(CP) ./$(RECOVERY_UBINIZE_CFG) $(KDIR); \
+		echo \[recoveryfs_volume\] > $(RECOVERY_UBINIZE_CFG_2K); \
+		echo mode=ubi >> $(RECOVERY_UBINIZE_CFG_2K); \
+		echo image=\"$(RECOVERY_UBIFS_IMAGE_2K)\" >> $(RECOVERY_UBINIZE_CFG_2K); \
+		echo vol_id=0 >> $(RECOVERY_UBINIZE_CFG_2K); \
+		echo vol_type=dynamic >> $(RECOVERY_UBINIZE_CFG_2K); \
+		echo vol_name=rootfs >> $(RECOVERY_UBINIZE_CFG_2K); \
+		echo vol_flags = autoresize >> $(RECOVERY_UBINIZE_CFG_2K); \
+		$(CP) ./$(RECOVERY_UBINIZE_CFG_2K) $(KDIR); \
 	)
 	( cd $(KDIR); \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS)  -o $(RECOVERY_UBIFS_IMAGE) $(RECOVERY_MKUBIFS_ARGS); \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o recoveryfs.ubi -m 4096 -p 256KiB -s 4096 $(RECOVERY_UBINIZE_CFG); \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS)  -o $(RECOVERY_UBIFS_IMAGE_2K) $(RECOVERY_MKUBIFS_ARGS_2K); \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o recoveryfs-2k.ubi -m 2048 -p 128KiB -s 2048 $(RECOVERY_UBINIZE_CFG_2K); \
 	$(CP) $(KDIR)/recoveryfs.ubi $(IMAGE_PRODUCTS_DIR)/; \
+	$(CP) $(KDIR)/recoveryfs-2k.ubi $(IMAGE_PRODUCTS_DIR)/; \
+	$(CP) $(KDIR)/ubinize-recoveryfs.cfg $(IMAGE_PRODUCTS_DIR)/; \
+	$(CP) $(KDIR)/ubinize-recoveryfs-2k.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
 endef
 

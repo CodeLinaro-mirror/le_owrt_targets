@@ -1,21 +1,33 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
+include generate-ubinize-cfg.mk
 
 KERNEL_BASEADDR = 0x80000000
-EXT4_IMAGE_SIZE = 220715200
+EXT4_IMAGE_SIZE = 262144000
 UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
 USERDATA_SIZE_EXT4 = 251658240
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
+UBINIZE_CFG = ubinize-$(BOARD).cfg
 RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
 RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
 RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
 RECOVERYFS_SIZE_EXT4 ?= 52428800
-CACHE_SIZE_EXT4 = 26214400
+CACHE_SIZE_EXT4 = 52428800
 
 ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
 endif
+
+
+SYSTEM_VOLUME_SIZE_G = "200MiB"
+SYSTEM_VOLUME_SIZE = "110MiB"
+ifeq ($(PROFILE),mbb-min)
+ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE)
+else
+ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
+endif
+
 
 ifeq ($(TARGET_VARIANT),perf)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf no_console_suspend=1 loglevel=0"
@@ -29,7 +41,11 @@ else
 IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/root-$(BOARD)
 endif
 
+ifeq ($(USER_VARIANT),1)
+IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)
+else
 IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
+endif
 
 SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
@@ -38,8 +54,15 @@ define Image/Prepare
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
+	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
 endef
+
+OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
+RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
+
+include ota-ext4.mk
+include ota-ubi.mk
 
 ifeq ($(PROFILE),recovery)
 
@@ -77,7 +100,6 @@ endef
 else
 
 define Image/mkfs/ubifs
-	$(CP) ./ubinize-$(BOARD).cfg $(KDIR)
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}/etc/uci-defaults/13_fix-group-user; \
@@ -85,6 +107,7 @@ define Image/mkfs/ubifs
 	cd $(KDIR); \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS) -o sysfs.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
+	$(call Image/Build/generate-ubinize-cfg)
 	( cd $(KDIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize \
 		-o sysfs.ubi -m 4096 -p 256KiB -s 4096 \
@@ -95,15 +118,14 @@ define Image/mkfs/ubifs
 	  $(CP) $(KDIR)/userfs.ubifs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-$(BOARD).cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
+	$(call Ota/Build/target-files-zip-ubi)
+	$(call Ota/Build/gen_ota_full_zip_ubi)
 endef
 
 define Image/mkfs/ext4
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}/etc/uci-defaults/13_fix-group-user; \
-	)
-	( cd $(IMAGE_PRODUCTS_DIR); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096 -s -l $(EXT4_IMAGE_SIZE) system.img $(IMAGE_ROOTFS) \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4) userdata.img $(IMAGE_ROOTFS)/data \
@@ -139,6 +161,15 @@ define Image/mkfs/ext4
 		mv -f boot.img.secure boot.img; \
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR); \
 	)
+	if [ $(CONFIG_OTA_RECOVERY_UPDATE) == y ]; then \
+		$(call Ota/Build/compute_sha1); \
+	fi
+	( cd $(IMAGE_PRODUCTS_DIR); \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096 -s -l $(EXT4_IMAGE_SIZE) system.img $(IMAGE_ROOTFS) \
+	)
+	$(call Ota/Build/releasetools-native)
+	$(call Ota/Build/target-files-zip-ext4)
+	$(call Ota/Build/gen_ota_full_zip_ext4)
 endef
 
 endif
