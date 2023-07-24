@@ -55,6 +55,9 @@ IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
 IMAGE_PRODUCTS_DIR_AB = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)-ab
 endif
 
+RECOVERY_IMGS_PATH = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/recovery
+RECOVERY_ROOTFS_PATH = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recovery/root-$(BOARD)
+
 SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 
@@ -109,6 +112,7 @@ define Image/Prepare
 	mkdir -p $(IMAGE_PRODUCTS_DIR_AB)
 	$(call Image/AB/GenerateABRootfs)
 endef
+
 define Image/GenerateUbiImages
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}$(1)/etc/passwd; \
@@ -130,12 +134,18 @@ define Image/GenerateUbiImages
 	)
 endef
 
+ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.ubi), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
+define Ota/Build/ubi
+	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure the recovery profile has been built!")
+endef
+endif
+
 define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
 	$(call Image/GenerateUbiImages,-ab)
-	$(call Ota/Build/target-files-zip-ubi)
-	$(call Ota/Build/gen_ota_full_zip_ubi)
+	$(call Ota/Build/ubi)
 endef
+
 define Image/GenerateExt4Images
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}$(1)/etc/passwd; \
@@ -189,13 +199,17 @@ define Image/GenerateBootImage
 
 endef
 
+ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.img), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
+define Ota/Build/ext4
+	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure recovery profile has been built!")
+endef
+endif
+
 define Image/mkfs/ext4
 	$(call Image/GenerateBootImage)
 	$(call Image/GenerateExt4Images)
 	$(call Image/GenerateExt4Images,-ab)
-	$(call Ota/Build/releasetools-native)
-	$(call Ota/Build/target-files-zip-ext4)
-	$(call Ota/Build/gen_ota_full_zip_ext4)
+	$(call Ota/Build/ext4)
 endef
 
 endif
