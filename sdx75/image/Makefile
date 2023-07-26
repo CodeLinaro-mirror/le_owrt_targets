@@ -1,6 +1,8 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
 include generate-ubinize-cfg.mk
+include ota-ext4.mk
+include ota-ubi.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
@@ -14,6 +16,8 @@ RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
 RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
 RECOVERYFS_SIZE_EXT4 ?= 52428800
 CACHE_SIZE_EXT4 = 52428800
+OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
+RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
 
 ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
@@ -47,6 +51,9 @@ else
 IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
 endif
 
+RECOVERY_IMGS_PATH = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/recovery
+RECOVERY_ROOTFS_PATH = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recovery/root-$(BOARD)
+
 SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 
@@ -57,12 +64,6 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
 endef
-
-OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
-RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
-
-include ota-ext4.mk
-include ota-ubi.mk
 
 ifeq ($(PROFILE),recovery)
 
@@ -99,7 +100,7 @@ endef
 
 else
 
-define Image/mkfs/ubifs
+define Image/GenerateUbiImages
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}/etc/uci-defaults/13_fix-group-user; \
@@ -118,11 +119,21 @@ define Image/mkfs/ubifs
 	  $(CP) $(KDIR)/userfs.ubifs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-$(BOARD).cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
+endef
+
+ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.ubi), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
+define Image/mkfs/ubifs
+	$(call Image/GenerateUbiImages)
+endef
+else
+define Image/mkfs/ubifs
+	$(call Image/GenerateUbiImages)
 	$(call Ota/Build/target-files-zip-ubi)
 	$(call Ota/Build/gen_ota_full_zip_ubi)
 endef
+endif
 
-define Image/mkfs/ext4
+define Image/GenerateExt4Images
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}/etc/uci-defaults/13_fix-group-user; \
@@ -136,7 +147,15 @@ define Image/mkfs/ext4
 	( cd $(IMAGE_PRODUCTS_DIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /cache -s -b 4096 -l $(CACHE_SIZE_EXT4) cache.img $(IMAGE_ROOTFS)/cache \
 	)
+	if [ $(CONFIG_OTA_RECOVERY_UPDATE) == y ]; then \
+		$(call Ota/Build/compute_sha1); \
+	fi
+	( cd $(IMAGE_PRODUCTS_DIR); \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096 -s -l $(EXT4_IMAGE_SIZE) system.img $(IMAGE_ROOTFS) \
+	)
+endef
 
+define Image/GenerateBootImage
 	( cd $(TOPDIR)/src/kernel-$(LINUX_VERSION)/kernel_platform && BUILD_CONFIG=msm-kernel/build.config.msm.$(KERNEL_PLATFORM_TARGET) OUT_DIR=../out/msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig/ \
 		./build/android/merge_dtbs.sh \
 		$(KDIR)/kernel_dtbs \
@@ -161,16 +180,22 @@ define Image/mkfs/ext4
 		mv -f boot.img.secure boot.img; \
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR); \
 	)
-	if [ $(CONFIG_OTA_RECOVERY_UPDATE) == y ]; then \
-		$(call Ota/Build/compute_sha1); \
-	fi
-	( cd $(IMAGE_PRODUCTS_DIR); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096 -s -l $(EXT4_IMAGE_SIZE) system.img $(IMAGE_ROOTFS) \
-	)
+endef
+
+ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.img), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
+define Image/mkfs/ext4
+	$(call Image/GenerateBootImage)
+	$(call Image/GenerateExt4Images)
+endef
+else
+define Image/mkfs/ext4
+	$(call Image/GenerateBootImage)
+	$(call Image/GenerateExt4Images)
 	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/target-files-zip-ext4)
 	$(call Ota/Build/gen_ota_full_zip_ext4)
 endef
+endif
 
 endif
 
