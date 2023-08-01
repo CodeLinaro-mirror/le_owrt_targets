@@ -3,7 +3,7 @@ include $(INCLUDE_DIR)/image.mk
 include generate-ubinize-cfg.mk
 include generate-ab-rootfs.mk
 include ota-ext4.mk
-include ota-ubi.mk
+include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
@@ -144,7 +144,7 @@ endif
 define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
 	$(call Image/GenerateUbiImages,-ab)
-	$(call Ota/Build/ubi)
+	$(call Ota/Build/ubi,4k)
 endef
 
 define Image/GenerateExt4Images

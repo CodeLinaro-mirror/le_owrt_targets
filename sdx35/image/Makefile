@@ -1,5 +1,6 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
+include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 209715200
@@ -14,6 +15,7 @@ RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
 RECOVERY_UBINIZE_CFG_2K = ubinize-recoveryfs-2k.cfg
 RECOVERY_UBIFS_IMAGE_2K = recoveryfs-2k.ubifs
 RECOVERY_MKUBIFS_ARGS_2K = -m 2048 -e 126976 -c 200 -F
+
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
 TARGET_SHA_TYPE = "sha256"
 
@@ -28,6 +30,9 @@ ifeq ($(USER_VARIANT),1)
 else
 	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
 endif
+
+RECOVERY_IMGS_PATH = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/recovery
+RECOVERY_ROOTFS_PATH = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/recovery/root-$(BOARD)
 
 ifeq ($(BUILD_WITH_MEMOPT),1)
 	UBI_IMAGE_SIZE = 126976
@@ -47,6 +52,12 @@ SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/context
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 endif
 
+ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.ubi), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
+define Ota/Build/ubi
+	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure the recovery profile has been built!")
+endef
+
+endif
 ifeq ($(PROFILE),recovery)
 
 define Image/Build/ubifs
@@ -106,6 +117,8 @@ define Image/Build/ubifs
 	  $(CP) $(KDIR)/userfs-2k.ubifs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-sdx35-M2.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
+	$(call Ota/Build/releasetools-native)
+	$(call Ota/Build/ubi,2k)
 endef
 
 else
@@ -135,6 +148,9 @@ define Image/Build/ubifs
 	  $(CP) $(KDIR)/ubinize-sdx35.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-sdx35-2k.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
+	$(call Ota/Build/releasetools-native)
+	$(call Ota/Build/ubi,2k)
+	$(call Ota/Build/ubi,4k)
 endef
 endif
 

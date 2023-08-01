@@ -1,6 +1,10 @@
 include $(TOPDIR)/owrt-qti-conf/sdx.mk
 include $(TOPDIR)/owrt-qti-ppat-prop/qtippatprop.mk
 
+ifeq ($(CONFIG_OTA_RECOVERY_UPDATE),y)
+RECOVERYUPDATER=recovery-updater
+endif
+
 define Profile/mbb-128m
 	NAME:=Qualcomm Technologies Inc., Kuno Profile
 	PACKAGES:=$(OPENWRT_STANDARD) \
@@ -10,7 +14,7 @@ define Profile/mbb-128m
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTICOREINTERNAL) \
 		$(QTIPPATPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef
 
 define Profile/mbb-128m/Description
@@ -33,7 +37,7 @@ define Profile/mbb
 		$(QTICOREINTERNAL) \
 		$(QTIPPATPROP) \
 		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef
 
 define Profile/mbb/Description
@@ -54,7 +58,7 @@ define Profile/m2
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
 		$(QTIPPATPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef
 
 define Profile/m2/Description
@@ -71,7 +75,8 @@ define Profile/recovery
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
 		-usb-composition usb-composition-recovery -initmss -sign_abl \
-		-qmi-shutdown-modem
+		-qmi-shutdown-modem applypatch bsdiff-ota edify libdivsufsort \
+		librecovery-updater-msm minadbd recovery updater
 endef
 
 define Profile/recovery/Description
