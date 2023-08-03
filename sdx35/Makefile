@@ -26,9 +26,6 @@ KERNEL_DIST_DIR:=$(TOPDIR)/src/kernel-$(LINUX_VERSION)/out/msm-kernel-$(KERNEL_P
 BUILD_CONFIG_NAME:=build.config.msm.$(KERNEL_PLATFORM_TARGET)
 OUT_DIR_NAME:=msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig
 
-# add sectools v2 from sec component
-SEC_PATH:=$(TOPDIR)/src/vendor/qcom/proprietary/sectools/Linux
-
 include $(INCLUDE_DIR)/target.mk
 
 $(eval $(call BuildTarget))
