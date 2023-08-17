@@ -73,6 +73,22 @@ endef
 
 $(eval $(call Profile,mbb-min))
 
+define Profile/mbb-512
+        NAME:=Qualcomm Technologies Inc., Pinnacles' MBB 512MB Profile
+        PACKAGES:=$(OPENWRT_STANDARD) \
+                $(COREBSP_UTILS) $(UTILS) \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTINTERNAL) \
+                $(QTISENSORSPROP) kmod-dataipa \
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+endef
+
+define Profile/mbb-512/Description
+        MBB 512MB sdx75 package set configuration.
+        Enables mbb-512 set of modules for sdx75 target.
+endef
+
+$(eval $(call Profile,mbb-512))
+
 define Profile/recovery
         NAME:=Qualcomm Technologies Inc., Recovery Profile
         PACKAGES:=$(OPENWRT_STANDARD) \
