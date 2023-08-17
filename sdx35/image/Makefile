@@ -27,7 +27,7 @@ ifeq ($(USER_VARIANT),1)
 	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)
 else
 	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
-
+endif
 
 ifeq ($(BUILD_WITH_MEMOPT),1)
 	UBI_IMAGE_SIZE = 126976
