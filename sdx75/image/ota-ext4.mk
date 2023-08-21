@@ -154,3 +154,9 @@ define Ota/Build/target-files-zip-ext4
 	echo "blockimgdiff_versions=3" >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
 	cd ${OTA_TARGET_IMAGE_ROOTFS_EXT4} && zip -qry ${OTA_TARGET_FILES_EXT4_PATH} *
 endef
+
+define Ota/Build/ext4
+	$(call Ota/Build/releasetools-native)
+	$(call Ota/Build/target-files-zip-ext4)
+	$(call Ota/Build/gen_ota_full_zip_ext4)
+endef

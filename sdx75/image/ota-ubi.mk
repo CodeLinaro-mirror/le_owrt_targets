@@ -113,3 +113,8 @@ define Ota/Build/target-files-zip-ubi
 
 	cd ${OTA_TARGET_IMAGE_ROOTFS_UBI} && zip -qry ${OTA_TARGET_FILES_UBI_PATH} *
 endef
+
+define Ota/Build/ubi
+	$(call Ota/Build/target-files-zip-ubi)
+	$(call Ota/Build/gen_ota_full_zip_ubi)
+endef

@@ -70,7 +70,8 @@ define Profile/recovery
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
-		-usb-composition usb-composition-recovery -initmss -sign_abl
+		-usb-composition usb-composition-recovery -initmss -sign_abl \
+		-qmi-shutdown-modem
 endef
 
 define Profile/recovery/Description
