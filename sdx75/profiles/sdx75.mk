@@ -80,7 +80,7 @@ define Profile/mbb-512
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTINTERNAL) \
-                $(QTISENSORSPROP) kmod-dataipa \
+                $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef
 
