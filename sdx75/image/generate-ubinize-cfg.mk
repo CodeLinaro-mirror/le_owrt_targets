@@ -62,9 +62,15 @@ define Image/Build/generate-ubinize-cfg-ab
 		echo vol_type=dynamic >> $(UBINIZE_CFG_AB); \
 		echo vol_name=cachefs >> $(UBINIZE_CFG_AB); \
 		echo vol_size=\"15MiB\" >> $(UBINIZE_CFG_AB); \
-		echo \[persist_volume\] >> $(UBINIZE_CFG_AB); \
+		echo \[systemrw_volume\] >> $(UBINIZE_CFG_AB); \
 		echo mode=ubi >> $(UBINIZE_CFG_AB); \
 		echo vol_id=4 >> $(UBINIZE_CFG_AB); \
+		echo vol_type=dynamic >> $(UBINIZE_CFG_AB); \
+		echo vol_name=systemrw >> $(UBINIZE_CFG_AB); \
+		echo vol_size=\"6MiB\" >> $(UBINIZE_CFG_AB); \
+		echo \[persist_volume\] >> $(UBINIZE_CFG_AB); \
+		echo mode=ubi >> $(UBINIZE_CFG_AB); \
+		echo vol_id=5 >> $(UBINIZE_CFG_AB); \
 		echo vol_type=dynamic >> $(UBINIZE_CFG_AB); \
 		echo vol_name=persist >> $(UBINIZE_CFG_AB); \
 		echo vol_size=\"6MiB\" >> $(UBINIZE_CFG_AB); \
