@@ -1,5 +1,6 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
+include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 209715200
@@ -14,11 +15,24 @@ RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
 RECOVERY_UBINIZE_CFG_2K = ubinize-recoveryfs-2k.cfg
 RECOVERY_UBIFS_IMAGE_2K = recoveryfs-2k.ubifs
 RECOVERY_MKUBIFS_ARGS_2K = -m 2048 -e 126976 -c 200 -F
+
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
 TARGET_SHA_TYPE = "sha256"
 
-IMAGE_ROOTFS = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-$(BOARD)
-IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
+ifeq ($(PROFILE),recovery)
+	IMAGE_ROOTFS = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/recovery/root-$(BOARD)
+else
+	IMAGE_ROOTFS = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-$(BOARD)
+endif
+
+ifeq ($(USER_VARIANT),1)
+	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)
+else
+	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
+endif
+
+RECOVERY_IMGS_PATH = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/recovery
+RECOVERY_ROOTFS_PATH = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/recovery/root-$(BOARD)
 
 ifeq ($(BUILD_WITH_MEMOPT),1)
 	UBI_IMAGE_SIZE = 126976
@@ -34,16 +48,22 @@ define Image/Prepare
 endef
 
 ifneq ($(CONFIG_TARGET_ROOTFS_SECURITY_LABELS),)
-SELINUX_UBI_OPTS := --selinux=$(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35/etc/selinux/selinux-policy/contexts/files/file_contexts
-SELINUX_EXT4_OPTS := -S $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35/etc/selinux/selinux-policy/contexts/files/file_contexts
+SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
+SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 endif
 
+ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.ubi), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
+define Ota/Build/ubi
+	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure the recovery profile has been built!")
+endef
+
+endif
 ifeq ($(PROFILE),recovery)
 
 define Image/Build/ubifs
 	( cd $(TOPDIR); \
-		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' build_dir/$(TARGET_DIR_NAME)/root-$(BOARD)/etc/passwd; \
-		rm -rf build_dir/$(TARGET_DIR_NAME)/root-$(BOARD)/etc/uci-defaults/13_fix-group-user; \
+		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' $(IMAGE_ROOTFS)/etc/passwd; \
+		rm -rf $(IMAGE_ROOTFS)/etc/uci-defaults/13_fix-group-user; \
 	)
 	( 	echo \[recoveryfs_volume\] > $(RECOVERY_UBINIZE_CFG); \
 		echo mode=ubi >> $(RECOVERY_UBINIZE_CFG); \
@@ -83,12 +103,12 @@ ifneq ($(CONFIG_TARGET_sdx35_m2),)
 define Image/Build/ubifs
 	$(CP) ./ubinize-sdx35-M2.cfg $(KDIR)
 	( cd $(TOPDIR); \
-		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' build_dir/$(TARGET_DIR_NAME)/root-sdx35/etc/passwd; \
-		rm -rf build_dir/$(TARGET_DIR_NAME)/root-sdx35/etc/uci-defaults/13_fix-group-user; \
+		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' $(IMAGE_ROOTFS)/etc/passwd; \
+		rm -rf $(IMAGE_ROOTFS)/etc/uci-defaults/13_fix-group-user; \
 	)
 	cd $(KDIR); \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35 -o sysfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35/data -o userfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS) -o sysfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
 	( cd $(KDIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-2k.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-M2.cfg; \
 	)
@@ -97,6 +117,8 @@ define Image/Build/ubifs
 	  $(CP) $(KDIR)/userfs-2k.ubifs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-sdx35-M2.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
+	$(call Ota/Build/releasetools-native)
+	$(call Ota/Build/ubi,2k)
 endef
 
 else
@@ -105,14 +127,14 @@ define Image/Build/ubifs
 	$(CP) ./ubinize-sdx35.cfg $(KDIR)
 	$(CP) ./ubinize-sdx35-2k.cfg $(KDIR)
 	( cd $(TOPDIR); \
-		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' build_dir/$(TARGET_DIR_NAME)/root-sdx35/etc/passwd; \
-		rm -rf build_dir/$(TARGET_DIR_NAME)/root-sdx35/etc/uci-defaults/13_fix-group-user; \
+		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' $(IMAGE_ROOTFS)/etc/passwd; \
+		rm -rf $(IMAGE_ROOTFS)etc/uci-defaults/13_fix-group-user; \
 	)
 	cd $(KDIR); \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35 -o sysfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35 -o sysfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35/data -o userfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-sdx35/data -o userfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS) -o sysfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS) -o sysfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
 	( cd $(KDIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-2k.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-2k.cfg; \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs.ubi -m 4096 -p 256KiB -s 4096 ubinize-sdx35.cfg; \
@@ -126,6 +148,9 @@ define Image/Build/ubifs
 	  $(CP) $(KDIR)/ubinize-sdx35.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-sdx35-2k.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
+	$(call Ota/Build/releasetools-native)
+	$(call Ota/Build/ubi,2k)
+	$(call Ota/Build/ubi,4k)
 endef
 endif
 
