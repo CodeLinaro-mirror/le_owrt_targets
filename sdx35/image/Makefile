@@ -1,6 +1,7 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
+include generate-ab-rootfs.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 209715200
@@ -31,7 +32,7 @@ endif
 ifeq ($(USER_VARIANT),1)
 	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)
 ifeq ($(PROFILE),mbb)
-	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)-ab
+	IMAGE_PRODUCTS_DIR_AB = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)-ab
 endif
 
 else
@@ -137,6 +138,11 @@ else
 define Image/Build/ubifs
 	$(CP) ./ubinize-sdx35.cfg $(KDIR)
 	$(CP) ./ubinize-sdx35-2k.cfg $(KDIR)
+ifeq ($(PROFILE), mbb)
+	$(call Image/AB/GenerateABRootfs)
+	$(CP) ./ubinize-sdx35-ab.cfg $(KDIR)
+	$(CP) ./ubinize-sdx35-ab-2k.cfg $(KDIR)
+endif
 	( cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' $(IMAGE_ROOTFS)/etc/passwd; \
 		rm -rf $(IMAGE_ROOTFS)etc/uci-defaults/13_fix-group-user; \
@@ -146,21 +152,6 @@ define Image/Build/ubifs
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS) -o sysfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
-	if [ "$(PROFILE)" == "mbb" ]; then \
-	$(CP) ./ubinize-sdx35-ab.cfg $(KDIR); \
-	mkdir -p $(IMAGE_ROOTFS_AB); \
-	mkdir -p $(IMAGE_PRODUCTS_DIR_AB); \
-	cp -rf $(IMAGE_ROOTFS)/* $(IMAGE_ROOTFS_AB)/; \
-	(cd $(TOPDIR); \
-		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' $(IMAGE_ROOTFS_AB)/etc/passwd; \
-		rm -rf $(IMAGE_ROOTFS_AB)/etc/uci-defaults/13_fix-group-user; \
-	); \
-	cd $(KDIR); \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS_AB) -o sysfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-ab.ubi -m 4096 -p 256KiB -s 4096 ubinize-sdx35-ab.cfg; \
-	$(CP) $(KDIR)/sysfs-ab.ubi $(IMAGE_PRODUCTS_DIR_AB)/; \
-	$(CP) $(KDIR)/ubinize-sdx35-ab.cfg $(IMAGE_PRODUCTS_DIR_AB)/; \
-	fi ; \
 	( cd $(KDIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-2k.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-2k.cfg; \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs.ubi -m 4096 -p 256KiB -s 4096 ubinize-sdx35.cfg; \
@@ -173,6 +164,26 @@ define Image/Build/ubifs
 	  $(CP) $(KDIR)/userfs.ubifs $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-sdx35.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-sdx35-2k.cfg $(IMAGE_PRODUCTS_DIR)/; \
+	)
+	( if [ "$(PROFILE)" == "mbb" ]; then \
+	(cd $(TOPDIR); \
+		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' $(IMAGE_ROOTFS_AB)/etc/passwd; \
+		rm -rf $(IMAGE_ROOTFS_AB)/etc/uci-defaults/13_fix-group-user; \
+	); \
+	cd $(KDIR); \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS_AB) -o sysfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS_AB) -o sysfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-ab-2k.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-ab-2k.cfg; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-ab.ubi -m 4096 -p 256KiB -s 4096 ubinize-sdx35-ab.cfg; \
+	$(CP) $(KDIR)/sysfs.ubifs $(IMAGE_PRODUCTS_DIR_AB)/; \
+	$(CP) $(KDIR)/sysfs-2k.ubifs $(IMAGE_PRODUCTS_DIR_AB)/; \
+	$(CP) $(KDIR)/sysfs-ab.ubi $(IMAGE_PRODUCTS_DIR_AB)/sysfs.ubi; \
+	$(CP) $(KDIR)/sysfs-ab-2k.ubi $(IMAGE_PRODUCTS_DIR_AB)/sysfs-2k.ubi; \
+	$(CP) $(KDIR)/userfs-2k.ubifs $(IMAGE_PRODUCTS_DIR_AB)/; \
+	$(CP) $(KDIR)/userfs.ubifs $(IMAGE_PRODUCTS_DIR_AB)/; \
+	$(CP) $(KDIR)/ubinize-sdx35-ab.cfg $(IMAGE_PRODUCTS_DIR_AB)/; \
+	$(CP) $(KDIR)/ubinize-sdx35-ab-2k.cfg $(IMAGE_PRODUCTS_DIR_AB)/; \
+	fi ; \
 	)
 	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/ubi,2k)
@@ -208,6 +219,7 @@ define Image/Build/ext4
 		mv -f boot.img.secure boot.img; \
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR); \
 		if [ "$(PROFILE)" == "mbb" ]; then \
+		mkdir -p $(IMAGE_PRODUCTS_DIR_AB); \
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR_AB); \
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR_AB); \
 		$(CP) $(IMAGE_PRODUCTS_DIR)/abl.elf $(IMAGE_PRODUCTS_DIR_AB); \
