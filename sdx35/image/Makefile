@@ -23,12 +23,23 @@ ifeq ($(PROFILE),recovery)
 	IMAGE_ROOTFS = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/recovery/root-$(BOARD)
 else
 	IMAGE_ROOTFS = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-$(BOARD)
+ifeq ($(PROFILE),mbb)
+	IMAGE_ROOTFS_AB = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-$(BOARD)-ab
+endif
 endif
 
 ifeq ($(USER_VARIANT),1)
 	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)
+ifeq ($(PROFILE),mbb)
+	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)-ab
+endif
+
 else
 	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
+ifeq ($(PROFILE),mbb)
+	IMAGE_PRODUCTS_DIR_AB = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)-ab
+endif
+
 endif
 
 RECOVERY_IMGS_PATH = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/recovery
@@ -135,6 +146,21 @@ define Image/Build/ubifs
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS) -o sysfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs-2k.ubifs -m 2048 -e 126976 -c 2146 -F; \
 	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/data -o userfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
+	if [ "$(PROFILE)" == "mbb" ]; then \
+	$(CP) ./ubinize-sdx35-ab.cfg $(KDIR); \
+	mkdir -p $(IMAGE_ROOTFS_AB); \
+	mkdir -p $(IMAGE_PRODUCTS_DIR_AB); \
+	cp -rf $(IMAGE_ROOTFS)/* $(IMAGE_ROOTFS_AB)/; \
+	(cd $(TOPDIR); \
+		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' $(IMAGE_ROOTFS_AB)/etc/passwd; \
+		rm -rf $(IMAGE_ROOTFS_AB)/etc/uci-defaults/13_fix-group-user; \
+	); \
+	cd $(KDIR); \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS_AB) -o sysfs.ubifs -m 4096 -e 253952 -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-ab.ubi -m 4096 -p 256KiB -s 4096 ubinize-sdx35-ab.cfg; \
+	$(CP) $(KDIR)/sysfs-ab.ubi $(IMAGE_PRODUCTS_DIR_AB)/; \
+	$(CP) $(KDIR)/ubinize-sdx35-ab.cfg $(IMAGE_PRODUCTS_DIR_AB)/; \
+	fi ; \
 	( cd $(KDIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-2k.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-2k.cfg; \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs.ubi -m 4096 -p 256KiB -s 4096 ubinize-sdx35.cfg; \
@@ -181,6 +207,11 @@ define Image/Build/ext4
 		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
 		mv -f boot.img.secure boot.img; \
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR); \
+		if [ "$(PROFILE)" == "mbb" ]; then \
+		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR_AB); \
+		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR_AB); \
+		$(CP) $(IMAGE_PRODUCTS_DIR)/abl.elf $(IMAGE_PRODUCTS_DIR_AB); \
+		fi ; \
 	)
 endef
 endif
