@@ -82,7 +82,7 @@ define Image/mkfs/ubifs
 		echo vol_id=0 >> $(RECOVERY_UBINIZE_CFG); \
 		echo vol_type=dynamic >> $(RECOVERY_UBINIZE_CFG); \
 		echo vol_name=rootfs >> $(RECOVERY_UBINIZE_CFG); \
-		echo vol_size=\"30MiB\" >> $(RECOVERY_UBINIZE_CFG); \
+		echo vol_flags = autoresize >> $(RECOVERY_UBINIZE_CFG); \
 		$(CP) ./$(RECOVERY_UBINIZE_CFG) $(KDIR) \
 	)
 	( cd $(KDIR); \
