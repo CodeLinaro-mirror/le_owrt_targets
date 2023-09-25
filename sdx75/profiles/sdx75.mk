@@ -2,6 +2,7 @@ include $(TOPDIR)/owrt-qti-conf/sdx.mk
 include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
 include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
+include $(TOPDIR)/owrt-qti-ipq-ezmesh/qtiipqezmesh.mk
 
 # include mk files available only in internal builds
 ifneq ($(EXTERNAL_BUILD),1)
@@ -43,7 +44,7 @@ define Profile/cpe
 		$(QTIIPQPROP) $(QTISSDK) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
-		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) \
+		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) $(QTIIPQEZMESH) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef
 
@@ -71,6 +72,22 @@ define Profile/mbb-min/Description
 endef
 
 $(eval $(call Profile,mbb-min))
+
+define Profile/mbb-512
+        NAME:=Qualcomm Technologies Inc., Pinnacles' MBB 512MB Profile
+        PACKAGES:=$(OPENWRT_STANDARD) \
+                $(COREBSP_UTILS) $(UTILS) \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTINTERNAL) \
+                $(QTISENSORSPROP) kmod-dataipa \
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+endef
+
+define Profile/mbb-512/Description
+        MBB 512MB sdx75 package set configuration.
+        Enables mbb-512 set of modules for sdx75 target.
+endef
+
+$(eval $(call Profile,mbb-512))
 
 define Profile/recovery
         NAME:=Qualcomm Technologies Inc., Recovery Profile

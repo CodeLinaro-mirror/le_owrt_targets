@@ -3,7 +3,9 @@ include $(INCLUDE_DIR)/image.mk
 include generate-ubinize-cfg.mk
 include generate-ab-rootfs.mk
 include ota-ext4.mk
-include ota-ubi.mk
+include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
+include abota-ext4.mk
+include abota-ubi.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
@@ -82,7 +84,7 @@ define Image/mkfs/ubifs
 		echo vol_id=0 >> $(RECOVERY_UBINIZE_CFG); \
 		echo vol_type=dynamic >> $(RECOVERY_UBINIZE_CFG); \
 		echo vol_name=rootfs >> $(RECOVERY_UBINIZE_CFG); \
-		echo vol_flags = autoresize >> $(RECOVERY_UBINIZE_CFG); \
+		echo vol_size=\"30MiB\" >> $(RECOVERY_UBINIZE_CFG); \
 		$(CP) ./$(RECOVERY_UBINIZE_CFG) $(KDIR) \
 	)
 	( cd $(KDIR); \
@@ -144,7 +146,9 @@ endif
 define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
 	$(call Image/GenerateUbiImages,-ab)
-	$(call Ota/Build/ubi)
+	$(call Ota/Build/ubi,4k)
+	$(call Ota/Build/target-files-zip-ubi-ab)
+	$(call Ota/Build/gen_ota_full_zip_ubi_ab)
 endef
 
 define Image/GenerateExt4Images
@@ -210,7 +214,10 @@ define Image/mkfs/ext4
 	$(call Image/GenerateBootImage)
 	$(call Image/GenerateExt4Images)
 	$(call Image/GenerateExt4Images,-ab)
+	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/ext4)
+	$(call Ota/Build/target-files-zip-ext4-ab)
+	$(call Ota/Build/gen_ota_full_zip_ext4_ab)
 endef
 
 endif
