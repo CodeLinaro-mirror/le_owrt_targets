@@ -6,6 +6,7 @@ include ota-ext4.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
 include abota-ext4.mk
 include abota-ubi.mk
+include generate-build-prop.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
@@ -22,6 +23,7 @@ RECOVERYFS_SIZE_EXT4 ?= 52428800
 CACHE_SIZE_EXT4 = 52428800
 OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
 RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
+BUILD_PROP = build.prop
 
 ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
@@ -71,6 +73,7 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/cache
 	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
+	$(call Image/GenerateBuildProp)
 endef
 
 define Image/mkfs/ubifs
@@ -114,6 +117,7 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/persist
 	mkdir -p $(IMAGE_PRODUCTS_DIR_AB)
 	$(call Image/AB/GenerateABRootfs)
+	$(call Image/GenerateBuildProp)
 endef
 
 define Image/GenerateUbiImages
