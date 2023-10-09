@@ -1,6 +1,7 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
+include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
 include generate-ab-rootfs.mk
 
 KERNEL_BASEADDR = 0x80000000
@@ -188,6 +189,10 @@ endif
 	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/ubi,2k)
 	$(call Ota/Build/ubi,4k)
+ifeq ($(PROFILE),mbb)
+	$(call Ota/Build/ubi_ab,2k)
+	$(call Ota/Build/ubi_ab,4k)
+endif
 endef
 endif
 
