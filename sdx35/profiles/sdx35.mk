@@ -13,6 +13,7 @@ define Profile/mbb-128m
 		$(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTINTERNAL) $(QTISSDK) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTICOREINTERNAL) \
+		$(QTIDATAINTERNAL) \
 		$(QTIPPATPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef
@@ -36,6 +37,7 @@ define Profile/mbb
 		$(QTIWLAN) $(QTIWLANPROP) \
 		$(QTICOREINTERNAL) \
 		$(QTIPPATPROP) \
+		$(QTIDATAINTERNAL) \
 		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
 endef

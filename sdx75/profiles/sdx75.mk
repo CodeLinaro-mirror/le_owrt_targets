@@ -9,6 +9,7 @@ ifneq ($(EXTERNAL_BUILD),1)
 	include $(TOPDIR)/owrt-qti-sensors-internal/qtisensorsinternal.mk
 endif
 include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
+include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
 
 ifeq ($(CONFIG_OTA_RECOVERY_UPDATE),y)
 RECOVERYUPDATER=recovery-updater
@@ -40,12 +41,13 @@ define Profile/cpe
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		$(QTIDATA) $(QTIDATAPROP) $(QTIRILPROP) $(QTICTAINTERNAL) \
-		$(QTIIPQPROP) $(QTISSDK) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) \
+		$(QTIIPQ) $(QTIIPQPROP) $(QTISSDK) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
 		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) $(QTIIPQEZMESH) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) \
+		-iw-full
 endef
 
 define Profile/cpe/Description
@@ -60,7 +62,7 @@ define Profile/mbb-min
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-                $(QTIDATA) $(QTIDATAPROP) $(QTIRILPROP) $(QTICTAINTERNAL) $(QTISSDK) \
+                $(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTISSDK) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) $(QTISENSORSPROP) $(QTIMSDCPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
@@ -72,6 +74,22 @@ define Profile/mbb-min/Description
 endef
 
 $(eval $(call Profile,mbb-min))
+
+define Profile/mbb-512
+        NAME:=Qualcomm Technologies Inc., Pinnacles' MBB 512MB Profile
+        PACKAGES:=$(OPENWRT_STANDARD) \
+                $(COREBSP_UTILS) $(UTILS) \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTINTERNAL) \
+                $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) \
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+endef
+
+define Profile/mbb-512/Description
+        MBB 512MB sdx75 package set configuration.
+        Enables mbb-512 set of modules for sdx75 target.
+endef
+
+$(eval $(call Profile,mbb-512))
 
 define Profile/recovery
         NAME:=Qualcomm Technologies Inc., Recovery Profile

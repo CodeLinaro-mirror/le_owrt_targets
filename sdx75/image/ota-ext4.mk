@@ -3,7 +3,6 @@ OTA_TARGET_FILES_EXT4_DEST = "target-files-ext4-dest.zip"
 OTA_FULL_UPDATE_EXT4 = "full_update_ext4.zip"
 OTA_INCREMENTAL_UPDATE_EXT4 = "incremental_update_ext4.zip"
 IMAGE_SYSTEM_MOUNT_POINT_EXT4 = "/system"
-IMAGE_ROOTFS_EXT4 = $(TOPDIR)/build_dir/target-aarch64_cortex-a53_musl/root-sdx75
 OTA_TARGET_FILES_EXT4_PATH = $(IMAGE_PRODUCTS_DIR)/$(OTA_TARGET_FILES_EXT4)
 OTA_TARGET_FILES_EXT4_DEST_PATH = $(IMAGE_PRODUCTS_DIR)/$(OTA_TARGET_FILES_EXT4_DEST)
 OTA_FULL_UPDATE_EXT4_PATH = $(IMAGE_PRODUCTS_DIR)/$(OTA_FULL_UPDATE_EXT4)
@@ -50,7 +49,7 @@ endef
 define Ota/Build/gen_ota_full_zip_ext4
 	cd $(BUILD_DIR)/OTA/ota-scripts; \
 	rm -rf update_ext4.zip; \
-	./full_ota.sh ${OTA_TARGET_FILES_EXT4_PATH} ${IMAGE_ROOTFS_EXT4} ext4 --block --system_path ${IMAGE_SYSTEM_MOUNT_POINT_EXT4} $(SIGN_OTA_PACKAGE); \
+	./full_ota.sh ${OTA_TARGET_FILES_EXT4_PATH} ${IMAGE_ROOTFS} ext4 --block --system_path ${IMAGE_SYSTEM_MOUNT_POINT_EXT4} $(SIGN_OTA_PACKAGE); \
 	cp update_ext4.zip ${OTA_FULL_UPDATE_EXT4_PATH}
 endef
 
@@ -126,21 +125,6 @@ define Ota/Build/target-files-zip-ext4
     #blocksize = BOARD_FLASH_BLOCK_SIZE
 	echo blocksize=131072 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
 
-    # boot_size: Size of boot partition from partition.xml
-	echo boot_size=0x4600000 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
-
-    # recovery_size : Size of recovery partition from partition.xml
-	echo recovery_size=0x4600000 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
-
-    #system_size : Size of system partition from partition.xml
-	echo system_size=0x0D27D8C0 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
-
-    #userdate_size : Size of data partition from partition.xml
-	echo userdata_size=0x0F000000 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
-
-    #cache_size : Size of cache partition from partition.xml
-	echo cache_size=0x03200000 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
-
     #mkyaffs2_extra_flags : -c $(BOARD_KERNEL_PAGESIZE) -s $(BOARD_KERNEL_SPARESIZE)
 	echo mkyaffs2_extra_flags=-c 4096 -s 16 >> ${OTA_TARGET_IMAGE_ROOTFS_EXT4}/META/misc_info.txt
 
@@ -156,7 +140,6 @@ define Ota/Build/target-files-zip-ext4
 endef
 
 define Ota/Build/ext4
-	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/target-files-zip-ext4)
 	$(call Ota/Build/gen_ota_full_zip_ext4)
 endef
