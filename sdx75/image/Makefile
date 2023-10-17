@@ -2,10 +2,10 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
 include generate-ubinize-cfg.mk
 include generate-ab-rootfs.mk
-include ota-ext4.mk
+include $(TOPDIR)/owrt-qti-bsp/include/ota-ext4.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
-include abota-ext4.mk
-include abota-ubi.mk
+include $(TOPDIR)/owrt-qti-bsp/include/abota-ext4.mk
+include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
 include generate-build-prop.mk
 
 KERNEL_BASEADDR = 0x80000000
@@ -152,8 +152,7 @@ define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
 	$(call Image/GenerateUbiImages,-ab)
 	$(call Ota/Build/ubi,4k)
-	$(call Ota/Build/target-files-zip-ubi-ab)
-	$(call Ota/Build/gen_ota_full_zip_ubi_ab)
+	$(call Ota/Build/ubi_ab,4k)
 endef
 
 define Image/GenerateExt4Images
