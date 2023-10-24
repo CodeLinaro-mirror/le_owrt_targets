@@ -160,6 +160,10 @@ define Image/GenerateExt4Images
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}$(1)/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}$(1)/etc/uci-defaults/13_fix-group-user; \
 	)
+	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
+		$(CP) $(TOPDIR)/src/kernel-$(LINUX_VERSION)/out/msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig/msm-kernel/certs/verity* \
+		$(IMAGE_PRODUCTS_DIR)$(1) ; \
+	fi
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4) userdata.img $(IMAGE_ROOTFS)$(1)/data \
 	)
@@ -178,6 +182,13 @@ define Image/GenerateExt4Images
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096 -s -l $(EXT4_IMAGE_SIZE) system.img $(IMAGE_ROOTFS)$(1) \
 	)
+	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096  -l $(EXT4_IMAGE_SIZE) system.img.raw $(IMAGE_ROOTFS)$(1) \
+	)
+	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
+		python getmetadata.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR); \
+		while [ ! -f  $(IMAGE_PRODUCTS_DIR)$(1)/system.img ]; do sleep 1; done; \
+	fi
 endef
 
 define Image/GenerateBootImage
@@ -191,7 +202,7 @@ define Image/GenerateBootImage
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR); \
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR_AB); \
 		$(KDIR)/build-tools/mkbootimg/mkbootimg.py --kernel $(KDIR)/Image \
-		--cmdline $(KERNEL_CMDLINE) --pagesize 4096 --base $(KERNEL_BASEADDR) --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb $(KDIR)/dtb.img --output boot.img \
+		--cmdline $(KERNEL_CMDLINE) --pagesize 4096 --base $(KERNEL_BASEADDR) --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb $(KDIR)/dtb.img --output boot.img; \
 	)
 	( cd $(KDIR); \
 		$(CP) boot.img boot.img.nonsecure; \
@@ -211,6 +222,7 @@ define Image/GenerateBootImage
 
 endef
 
+
 ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.img), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
 define Ota/Build/ext4
 	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure recovery profile has been built!")
@@ -220,7 +232,15 @@ endif
 define Image/mkfs/ext4
 	$(call Image/GenerateBootImage)
 	$(call Image/GenerateExt4Images)
+	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
+		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
+		while [ ! -f  $(IMAGE_PRODUCTS_DIR)/boot.img ]; do sleep 1; done; \
+	fi
 	$(call Image/GenerateExt4Images,-ab)
+	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
+		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB);\
+		while [ ! -f  $(IMAGE_PRODUCTS_DIR_AB)/boot.img ]; do sleep 1; done; \
+	fi
 	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/ext4)
 	$(call Ota/Build/target-files-zip-ext4-ab)
