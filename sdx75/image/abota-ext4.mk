@@ -8,15 +8,19 @@ OTA_TARGET_IMAGE_ROOTFS_EXT4_AB = ${BUILD_DIR}/OTA/ota-target-image-ext4-ab
 MACHINE_FILESMAP_FULL_PATH_EXT4 = $(TOPDIR)/owrt-qti-bsp/conf/machine/filesmap/sdx75-emmc-filesmap
 
 SIGN_OTA_PACKAGE = ""
-
+MIRROR_SYNC = ""
 ifeq ($(CONFIG_OTA_PACKAGE_VERIFICATION), y)
 	SIGN_OTA_PACKAGE = "--sign"
+endif
+
+ifeq ($(CONFIG_TARGET_sdx75), y)
+	MIRROR_SYNC = "--mirror_sync"
 endif
 
 define Ota/Build/gen_ota_full_zip_ext4_ab
 	cd $(BUILD_DIR)/OTA/ota-scripts; \
 	rm -rf update_ext4.zip; \
-	./full_ota.sh ${OTA_TARGET_FILES_EXT4_AB_PATH} ${IMAGE_ROOTFS}-ab ext4 --block --system_path ${IMAGE_SYSTEM_MOUNT_POINT_EXT4} $(SIGN_OTA_PACKAGE); \
+	./full_ota.sh ${OTA_TARGET_FILES_EXT4_AB_PATH} ${IMAGE_ROOTFS}-ab ext4 --block --system_path ${IMAGE_SYSTEM_MOUNT_POINT_EXT4} $(SIGN_OTA_PACKAGE) $(MIRROR_SYNC); \
 	cp update_ext4.zip ${OTA_FULL_UPDATE_EXT4_AB_PATH}
 endef
 
