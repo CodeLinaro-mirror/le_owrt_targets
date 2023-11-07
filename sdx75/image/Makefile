@@ -2,10 +2,10 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
 include generate-ubinize-cfg.mk
 include generate-ab-rootfs.mk
-include ota-ext4.mk
+include $(TOPDIR)/owrt-qti-bsp/include/ota-ext4.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
-include abota-ext4.mk
-include abota-ubi.mk
+include $(TOPDIR)/owrt-qti-bsp/include/abota-ext4.mk
+include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
 include generate-build-prop.mk
 
 KERNEL_BASEADDR = 0x80000000
@@ -27,7 +27,7 @@ BUILD_PROP = build.prop
 PERSIST_SIZE_EXT4 = 8192KB
 
 ifeq ($(TARGET_VARIANT),debug)
-KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
+KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat"
 endif
 
 ROOTFS_VOLUME_SIZE_AB = "90MiB"
@@ -41,7 +41,7 @@ endif
 
 
 ifeq ($(TARGET_VARIANT),perf)
-KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf no_console_suspend=1 loglevel=0"
+KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat no_console_suspend=1 loglevel=0"
 endif
 
 TARGET_SHA_TYPE = "sha256"
@@ -152,8 +152,7 @@ define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
 	$(call Image/GenerateUbiImages,-ab)
 	$(call Ota/Build/ubi,4k)
-	$(call Ota/Build/target-files-zip-ubi-ab)
-	$(call Ota/Build/gen_ota_full_zip_ubi_ab)
+	$(call Ota/Build/ubi_ab,4k)
 endef
 
 define Image/GenerateExt4Images

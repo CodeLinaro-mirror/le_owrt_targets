@@ -39,7 +39,7 @@ define Profile/mbb
 		$(QTIPPATPROP) \
 		$(QTIDATAINTERNAL) \
 		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc subsystem-ramdump -swconfig $(RECOVERYUPDATER)
 endef
 
 define Profile/mbb/Description
@@ -78,7 +78,7 @@ define Profile/recovery
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
 		-usb-composition usb-composition-recovery -initmss -sign_abl \
 		-qmi-shutdown-modem applypatch bsdiff-ota edify libdivsufsort \
-		librecovery-updater-msm minadbd recovery updater
+		librecovery-updater-msm recovery updater
 endef
 
 define Profile/recovery/Description
