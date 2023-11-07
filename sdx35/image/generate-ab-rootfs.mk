@@ -47,7 +47,7 @@ define Image/AB/GenerateABRootfs
 
 			$(foreach installed_file,$(shell cat $(IMAGE_ROOTFS_AB)/usr/lib/opkg/info/$(pkg).list),
 				if echo $(installed_file) | grep -q "init"; then \
-					echo "Eanbling init "; \
+					echo "Enabling init "; \
 					IPKG_INSTROOT=$(IMAGE_ROOTFS_AB) $$(command -v bash) $(IMAGE_ROOTFS_AB)/etc/rc.common $(IMAGE_ROOTFS_AB)/$(installed_file) enable; \
 				fi
 		) ) \
