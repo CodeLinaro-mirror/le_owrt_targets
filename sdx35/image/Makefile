@@ -3,6 +3,7 @@ include $(INCLUDE_DIR)/image.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
 include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
 include generate-ab-rootfs.mk
+include generate-build-prop.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 209715200
@@ -17,6 +18,7 @@ RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
 RECOVERY_UBINIZE_CFG_2K = ubinize-recoveryfs-2k.cfg
 RECOVERY_UBIFS_IMAGE_2K = recoveryfs-2k.ubifs
 RECOVERY_MKUBIFS_ARGS_2K = -m 2048 -e 126976 -c 200 -F
+BUILD_PROP = build.prop
 
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_perf"
 TARGET_SHA_TYPE = "sha256"
@@ -58,6 +60,7 @@ define Image/Prepare
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p $(IMAGE_ROOTFS)/cache
 	mkdir -p $(IMAGE_ROOTFS)/persist
+	$(call Image/GenerateBuildProp)
 endef
 
 ifneq ($(CONFIG_TARGET_ROOTFS_SECURITY_LABELS),)
