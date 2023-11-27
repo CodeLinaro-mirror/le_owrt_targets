@@ -104,11 +104,11 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
 # Calculate offset
     hash_offset = adjustedSystemSize
     hash_size=os.path.getsize(system_images_dir +'/verity/verityHash')
-    fec_offset = int(hash_offset) + int(hash_size) 
+    fec_offset = (int(hash_offset) + int(hash_size)) // 4096 
 ## Creating the verity cmdline that is requried .
     ROOT_SECTORS = int(Datablocks) * 8
     with open(system_images_dir +'/verity/cmdline', 'w') as cmdline_file:
-        vcmdline = 'verity=\\"'+ str(ROOT_SECTORS)+' '+ str(Datablocks.strip())+' '+  str((Roothash).strip()) + ' '+ str(0) + ' 1\\"'
+        vcmdline = 'verity=\\"'+ str(ROOT_SECTORS)+' '+ str(Datablocks.strip())+' '+  str((Roothash).strip()) + ' '+ str(fec_offset) + ' 1\\"'
         cmdline_file.write(vcmdline)
         cmdline_file.close()
 
