@@ -121,8 +121,8 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
 	mkdir -p $(IMAGE_PRODUCTS_DIR_AB)
-	$(call Image/AB/GenerateABRootfs)
 	$(call Image/GenerateBuildProp)
+	$(call Image/AB/GenerateABRootfs)
 endef
 
 define Image/GenerateUbiImages
