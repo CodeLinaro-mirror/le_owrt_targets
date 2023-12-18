@@ -98,7 +98,7 @@ define Profile/recovery
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTISENSORSPROP) \
                 -ipa_fws -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
                 -usb-composition usb-composition-recovery -initmss -sign_abl applypatch bsdiff-ota edify \
-                libdivsufsort librecovery-updater-msm recovery updater
+                libdivsufsort librecovery-updater-msm recovery updater -rproc-tracing
 endef
 
 define Profile/recovery/Description
