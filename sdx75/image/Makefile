@@ -30,7 +30,7 @@ ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat"
 endif
 
-ROOTFS_VOLUME_SIZE_AB = "90MiB"
+ROOTFS_VOLUME_SIZE_AB = "95MiB"
 SYSTEM_VOLUME_SIZE_G = "150MiB"
 SYSTEM_VOLUME_SIZE = "110MiB"
 SYSTEM_VOLUME_SIZE_512 = "66MiB"
