@@ -82,7 +82,7 @@ define Profile/mbb-512
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTINTERNAL) \
                 $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
-                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config $(RECOVERYUPDATER)
 endef
 
 define Profile/mbb-512/Description
@@ -99,7 +99,7 @@ define Profile/recovery
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTISENSORSPROP) \
                 -ipa_fws -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
                 -usb-composition usb-composition-recovery -initmss -sign_abl applypatch bsdiff-ota edify \
-                libdivsufsort librecovery-updater-msm recovery updater
+                libdivsufsort librecovery-updater-msm recovery updater -rproc-tracing
 endef
 
 define Profile/recovery/Description
