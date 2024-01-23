@@ -19,7 +19,7 @@ UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
 RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
 RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
 RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
-RECOVERYFS_SIZE_EXT4 ?= 52428800
+RECOVERYFS_SIZE_EXT4 ?= 54000000
 CACHE_SIZE_EXT4 = 52428800
 OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
 RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
@@ -30,7 +30,7 @@ ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat"
 endif
 
-ROOTFS_VOLUME_SIZE_AB = "90MiB"
+ROOTFS_VOLUME_SIZE_AB = "95MiB"
 SYSTEM_VOLUME_SIZE_G = "150MiB"
 SYSTEM_VOLUME_SIZE = "110MiB"
 SYSTEM_VOLUME_SIZE_512 = "66MiB"
