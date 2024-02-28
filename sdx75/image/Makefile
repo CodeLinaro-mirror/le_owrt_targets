@@ -78,6 +78,8 @@ SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/file
 
 ifeq ($(PROFILE),recovery)
 define Image/Prepare
+	rm -f $(TOPDIR)/all_license.log
+	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
@@ -120,6 +122,8 @@ endef
 else
 
 define Image/Prepare
+	rm -f $(TOPDIR)/all_license.log
+	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
