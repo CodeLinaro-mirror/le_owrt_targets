@@ -25,10 +25,11 @@ OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
 RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
 BUILD_PROP = build.prop
 PERSIST_SIZE_EXT4 = 8192KB
-
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
+
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
+EXT4_IMAGE_SIZE = 288358400
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
