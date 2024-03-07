@@ -9,7 +9,7 @@ include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
 include generate-build-prop.mk
 
 KERNEL_BASEADDR = 0x80000000
-EXT4_IMAGE_SIZE = 288358400
+EXT4_IMAGE_SIZE = 262144000
 UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
 USERDATA_SIZE_EXT4 = 251658240
