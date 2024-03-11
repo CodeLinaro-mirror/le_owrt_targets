@@ -16,5 +16,5 @@ define Image/GenerateBuildProp
 	fi; \
 	cd -; \
 	rm -rf $(IMAGE_ROOTFS)/$(BUILD_PROP); \
-	fakeroot cp $(TOPDIR)/$(BUILD_PROP) $(IMAGE_ROOTFS)/etc;
+	fakeroot cp $(TOPDIR)/$(BUILD_PROP) $(IMAGE_ROOTFS);
 endef
