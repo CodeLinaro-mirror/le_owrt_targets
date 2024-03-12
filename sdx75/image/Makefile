@@ -9,7 +9,7 @@ include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
 include generate-build-prop.mk
 
 KERNEL_BASEADDR = 0x80000000
-EXT4_IMAGE_SIZE = 262144000
+EXT4_IMAGE_SIZE = 288358400
 UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
 USERDATA_SIZE_EXT4 = 2684354560
@@ -29,7 +29,7 @@ SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
-EXT4_IMAGE_SIZE = 304087040
+EXT4_IMAGE_SIZE = 314572800
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
