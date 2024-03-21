@@ -19,15 +19,21 @@ UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
 RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
 RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
 RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
-RECOVERYFS_SIZE_EXT4 ?= 54000000
+RECOVERYFS_SIZE_EXT4 ?= 73400320
 CACHE_SIZE_EXT4 = 52428800
 OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
 RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
 BUILD_PROP = build.prop
 PERSIST_SIZE_EXT4 = 8192KB
+SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
+
+ifeq ($(OWRT_VERSION),23.05)
+SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
+EXT4_IMAGE_SIZE = 288358400
+endif
 
 ifeq ($(TARGET_VARIANT),debug)
-KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat"
+KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
 endif
 
 ROOTFS_VOLUME_SIZE_AB = "95MiB"
@@ -45,7 +51,7 @@ endif
 
 
 ifeq ($(TARGET_VARIANT),perf)
-KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat no_console_suspend=1 loglevel=0"
+KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe no_console_suspend=1 loglevel=0"
 endif
 
 TARGET_SHA_TYPE = "sha256"
@@ -73,6 +79,8 @@ SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/file
 
 ifeq ($(PROFILE),recovery)
 define Image/Prepare
+	rm -f $(TOPDIR)/all_license.log
+	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
@@ -83,7 +91,7 @@ endef
 
 define Image/mkfs/ubifs
 	( cd $(TOPDIR); \
-		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
+		$(SED_BIN_PATH) -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}/etc/uci-defaults/13_fix-group-user; \
 	)
 	( 	echo \[recoveryfs_volume\] > $(RECOVERY_UBINIZE_CFG); \
@@ -92,7 +100,7 @@ define Image/mkfs/ubifs
 		echo vol_id=0 >> $(RECOVERY_UBINIZE_CFG); \
 		echo vol_type=dynamic >> $(RECOVERY_UBINIZE_CFG); \
 		echo vol_name=rootfs >> $(RECOVERY_UBINIZE_CFG); \
-		echo vol_size=\"30MiB\" >> $(RECOVERY_UBINIZE_CFG); \
+		echo vol_size=\"35MiB\" >> $(RECOVERY_UBINIZE_CFG); \
 		$(CP) ./$(RECOVERY_UBINIZE_CFG) $(KDIR) \
 	)
 	( cd $(KDIR); \
@@ -104,7 +112,7 @@ endef
 
 define Image/mkfs/ext4
 	( cd $(TOPDIR); \
-		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
+		$(SED_BIN_PATH) -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}/etc/uci-defaults/13_fix-group-user; \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR); \
@@ -115,6 +123,8 @@ endef
 else
 
 define Image/Prepare
+	rm -f $(TOPDIR)/all_license.log
+	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
@@ -127,7 +137,7 @@ endef
 
 define Image/GenerateUbiImages
 	( cd $(TOPDIR); \
-		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}$(1)/etc/passwd; \
+		$(SED_BIN_PATH) -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}$(1)/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}$(1)/etc/uci-defaults/13_fix-group-user; \
 	)
 	cd $(KDIR); \
@@ -161,7 +171,7 @@ endef
 
 define Image/GenerateExt4Images
 	( cd $(TOPDIR); \
-		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}$(1)/etc/passwd; \
+		$(SED_BIN_PATH) -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}$(1)/etc/passwd; \
 		rm -rf ${IMAGE_ROOTFS}$(1)/etc/uci-defaults/13_fix-group-user; \
 	)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
