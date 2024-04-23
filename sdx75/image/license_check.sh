@@ -4,7 +4,7 @@
 #!/bin/bash
 
 TOPDIR=$(pwd)
-BUILD_DIR="$TOPDIR/../../../../build_dir/target-aarch64_cortex-a53_musl/"
+BUILD_DIR="$TOPDIR/build_dir/target-aarch64_cortex-a53_musl/"
 directory="$BUILD_DIR/root-sdx75/usr/lib/opkg/info"
 whitelist=("lftp")  # Add the package names you want to whitelist
 
