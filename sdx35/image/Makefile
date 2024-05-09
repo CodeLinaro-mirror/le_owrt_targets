@@ -60,6 +60,7 @@ define Image/Prepare
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p $(IMAGE_ROOTFS)/cache
 	mkdir -p $(IMAGE_ROOTFS)/persist
+	$(SED_BIN_PATH) -i 's/enforcing/disabled/g'  $(RECOVERY_ROOTFS_PATH)/etc/selinux/config
 	$(call Image/GenerateBuildProp)
 endef
 
