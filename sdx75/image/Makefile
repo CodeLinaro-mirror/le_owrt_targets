@@ -12,7 +12,7 @@ KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
 UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
-USERDATA_SIZE_EXT4 = 251658240
+USERDATA_SIZE_EXT4 = 356515840
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
 UBINIZE_CFG = ubinize-$(BOARD).cfg
 UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
@@ -164,9 +164,7 @@ endif
 
 define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
-	$(call Image/GenerateUbiImages,-ab)
 	$(call Ota/Build/ubi,4k)
-	$(call Ota/Build/ubi_ab,4k)
 endef
 
 define Image/GenerateExt4Images
