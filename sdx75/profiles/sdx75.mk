@@ -2,6 +2,7 @@ include $(TOPDIR)/owrt-qti-conf/sdx.mk
 include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
 include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
+include $(TOPDIR)/owrt-qti-ipq-ezmesh/qtiipqezmesh.mk
 
 # include mk files available only in internal builds
 ifneq ($(EXTERNAL_BUILD),1)
@@ -44,7 +45,7 @@ define Profile/cpe
 		$(QTIIPQ) $(QTIIPQPROP) $(QTISSDK) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
-		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) \
+		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) $(QTIIPQEZMESH) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) \
 		-iw-full
 endef
