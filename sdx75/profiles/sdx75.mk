@@ -81,7 +81,7 @@ define Profile/mbb-512
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
-                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config -lftp $(RECOVERYUPDATER)
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config -lftp -rproc-tracing $(RECOVERYUPDATER)
 endef
 
 define Profile/mbb-512/Description
