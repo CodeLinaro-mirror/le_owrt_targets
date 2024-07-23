@@ -29,7 +29,7 @@ SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
-EXT4_IMAGE_SIZE = 288358400
+EXT4_IMAGE_SIZE = 304087040
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
@@ -48,7 +48,6 @@ ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_512)
 else
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
 endif
-
 
 ifeq ($(TARGET_VARIANT),perf)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe no_console_suspend=1 loglevel=0"
@@ -235,6 +234,23 @@ define Image/GenerateBootImage
 
 endef
 
+define Image/ReGenerateBootImage
+	( cd $(KDIR); \
+		$(CP) boot.img boot.img.nonsecure; \
+		openssl dgst -$(TARGET_SHA_TYPE) -binary boot.img.nonsecure > boot.img.$(TARGET_SHA_TYPE); \
+		openssl pkeyutl -sign -in boot.img.$(TARGET_SHA_TYPE) \
+				-inkey $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/sigkeys/vble-qti.key \
+				-out boot.img.sig -pkeyopt digest:$(TARGET_SHA_TYPE) -pkeyopt rsa_padding_mode:pkcs1; \
+		dd if=/dev/zero of=boot.img.sig.padded bs=2048 count=1 ;\
+		dd if=boot.img.sig of=boot.img.sig.padded conv=notrunc; \
+		cat boot.img.nonsecure boot.img.sig.padded > boot.img.secure; \
+		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
+		mv -f boot.img.secure boot.img; \
+		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR); \
+		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR_AB); \
+		$(CP) $(IMAGE_PRODUCTS_DIR)/abl.elf $(IMAGE_PRODUCTS_DIR_AB); \
+	)
+endef
 
 ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.img), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
 define Ota/Build/ext4
@@ -253,6 +269,9 @@ define Image/mkfs/ext4
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
 		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB);\
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR_AB)/boot.img ]; do sleep 1; done; \
+	fi
+	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
+		$(call Image/ReGenerateBootImage); \
 	fi
 	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/ext4)
