@@ -235,7 +235,7 @@ define Image/GenerateBootImage
 endef
 
 define Image/ReGenerateBootImage
-	( cd $(KDIR); \
+	(cd $(IMAGE_PRODUCTS_DIR); \
 		$(CP) boot.img boot.img.nonsecure; \
 		openssl dgst -$(TARGET_SHA_TYPE) -binary boot.img.nonsecure > boot.img.$(TARGET_SHA_TYPE); \
 		openssl pkeyutl -sign -in boot.img.$(TARGET_SHA_TYPE) \
@@ -246,9 +246,17 @@ define Image/ReGenerateBootImage
 		cat boot.img.nonsecure boot.img.sig.padded > boot.img.secure; \
 		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
 		mv -f boot.img.secure boot.img; \
-		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR); \
-		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR_AB); \
-		$(CP) $(IMAGE_PRODUCTS_DIR)/abl.elf $(IMAGE_PRODUCTS_DIR_AB); \
+		cd $(IMAGE_PRODUCTS_DIR_AB); \
+		$(CP) boot.img boot.img.nonsecure; \
+		openssl dgst -$(TARGET_SHA_TYPE) -binary boot.img.nonsecure > boot.img.$(TARGET_SHA_TYPE); \
+		openssl pkeyutl -sign -in boot.img.$(TARGET_SHA_TYPE) \
+				-inkey $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/sigkeys/vble-qti.key \
+				-out boot.img.sig -pkeyopt digest:$(TARGET_SHA_TYPE) -pkeyopt rsa_padding_mode:pkcs1; \
+		dd if=/dev/zero of=boot.img.sig.padded bs=2048 count=1 ;\
+		dd if=boot.img.sig of=boot.img.sig.padded conv=notrunc; \
+		cat boot.img.nonsecure boot.img.sig.padded > boot.img.secure; \
+		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
+		mv -f boot.img.secure boot.img; \
 	)
 endef
 
