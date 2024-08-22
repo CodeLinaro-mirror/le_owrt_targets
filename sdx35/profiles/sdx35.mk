@@ -15,7 +15,7 @@ define Profile/mbb-128m
 		$(QTICOREINTERNAL) \
 		$(QTIDATAINTERNAL) \
 		$(QTIPPATPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) -bind -bind-dig
 endef
 
 define Profile/mbb-128m/Description
@@ -54,13 +54,13 @@ define Profile/m2
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		$(QTIDATA) $(QTIDATAPROP) \
+		$(QTIDATAM2) $(QTIDATAPROP) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
 		$(QTICOREINTERNAL) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
 		$(QTIPPATPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) -bind -bind-dig
 endef
 
 define Profile/m2/Description
@@ -78,7 +78,7 @@ define Profile/recovery
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
 		-usb-composition usb-composition-recovery -initmss -sign_abl \
 		applypatch bsdiff-ota edify libdivsufsort \
-		librecovery-updater-msm recovery updater
+		librecovery-updater-msm recovery updater -bind -bind-dig
 endef
 
 define Profile/recovery/Description
