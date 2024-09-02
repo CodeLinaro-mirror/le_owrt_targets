@@ -2,6 +2,7 @@ include $(TOPDIR)/owrt-qti-conf/sdx.mk
 include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
 include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
+include $(TOPDIR)/owrt-qti-ipq-ezmesh/feeds/qtiipqezmesh.mk
 
 # include mk files available only in internal builds
 ifneq ($(EXTERNAL_BUILD),1)
@@ -44,7 +45,7 @@ define Profile/cpe
 		$(QTIIPQ) $(QTIIPQPROP) $(QTISSDK) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
-		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) \
+		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) $(QTIIPQEZMESH) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) \
 		-iw-full
 endef
@@ -56,6 +57,28 @@ endef
 
 $(eval $(call Profile,cpe))
 
+define Profile/cpe-v1
+        NAME:=Qualcomm Technologies Inc., Pinnacles' CPE Profile
+        PACKAGES:=$(OPENWRT_STANDARD) \
+                $(COREBSP_UTILS) $(UTILS) \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+                $(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) \
+                $(QTIIPQ) $(QTIIPQPROP) $(QTISSDK) \
+                $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
+                $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
+                $(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) \
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) \
+                -iw-full
+endef
+
+define Profile/cpe-v1/Description
+        CPE-V1 sdx75 package set configuration.
+        Enables complete set of modules for sdx75 target.
+endef
+
+$(eval $(call Profile,cpe-v1))
+
+
 define Profile/mbb-min
         NAME:=Qualcomm Technologies Inc., Pinnacles' MBB Minimal Profile
         PACKAGES:=$(OPENWRT_STANDARD) \
@@ -64,7 +87,7 @@ define Profile/mbb-min
                 $(QTIDATAM2) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTISSDK) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) $(QTISENSORSPROP) $(QTIMSDCPROP) \
-                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp $(RECOVERYUPDATER)
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp $(RECOVERYUPDATER) -bind -bind-dig
 endef
 
 define Profile/mbb-min/Description
@@ -81,7 +104,7 @@ define Profile/mbb-512
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
-                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config -lftp -rproc-tracing $(RECOVERYUPDATER)
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config -lftp -rproc-tracing $(RECOVERYUPDATER) -bind -bind-dig
 endef
 
 define Profile/mbb-512/Description
@@ -98,7 +121,7 @@ define Profile/recovery
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTISENSORSPROP) \
                 -ipa_fws -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
                 -usb-composition usb-composition-recovery -initmss -sign_abl applypatch bsdiff-ota edify \
-                libdivsufsort librecovery-updater-msm recovery updater -rproc-tracing -lftp
+                libdivsufsort librecovery-updater-msm recovery updater -rproc-tracing -lftp -bind -bind-dig
 endef
 
 define Profile/recovery/Description
