@@ -12,7 +12,7 @@ KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
 UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
-USERDATA_SIZE_EXT4 = 2684354560
+USERDATA_SIZE_EXT4 = 356515840
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
 UBINIZE_CFG = ubinize-$(BOARD).cfg
 UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
@@ -29,14 +29,14 @@ SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
-EXT4_IMAGE_SIZE = 304087040
+EXT4_IMAGE_SIZE = 288358400
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
 endif
 
-ROOTFS_VOLUME_SIZE_AB = "115MiB"
+ROOTFS_VOLUME_SIZE_AB = "95MiB"
 SYSTEM_VOLUME_SIZE_G = "150MiB"
 SYSTEM_VOLUME_SIZE = "110MiB"
 SYSTEM_VOLUME_SIZE_512 = "66MiB"
@@ -48,6 +48,7 @@ ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_512)
 else
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
 endif
+
 
 ifeq ($(TARGET_VARIANT),perf)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe no_console_suspend=1 loglevel=0"
@@ -164,9 +165,7 @@ endif
 
 define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
-	$(call Image/GenerateUbiImages,-ab)
 	$(call Ota/Build/ubi,4k)
-	$(call Ota/Build/ubi_ab,4k)
 endef
 
 define Image/GenerateExt4Images
@@ -236,31 +235,6 @@ define Image/GenerateBootImage
 
 endef
 
-define Image/ReGenerateBootImage
-	(cd $(IMAGE_PRODUCTS_DIR); \
-		$(CP) boot.img boot.img.nonsecure; \
-		openssl dgst -$(TARGET_SHA_TYPE) -binary boot.img.nonsecure > boot.img.$(TARGET_SHA_TYPE); \
-		openssl pkeyutl -sign -in boot.img.$(TARGET_SHA_TYPE) \
-				-inkey $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/sigkeys/vble-qti.key \
-				-out boot.img.sig -pkeyopt digest:$(TARGET_SHA_TYPE) -pkeyopt rsa_padding_mode:pkcs1; \
-		dd if=/dev/zero of=boot.img.sig.padded bs=2048 count=1 ;\
-		dd if=boot.img.sig of=boot.img.sig.padded conv=notrunc; \
-		cat boot.img.nonsecure boot.img.sig.padded > boot.img.secure; \
-		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
-		mv -f boot.img.secure boot.img; \
-		cd $(IMAGE_PRODUCTS_DIR_AB); \
-		$(CP) boot.img boot.img.nonsecure; \
-		openssl dgst -$(TARGET_SHA_TYPE) -binary boot.img.nonsecure > boot.img.$(TARGET_SHA_TYPE); \
-		openssl pkeyutl -sign -in boot.img.$(TARGET_SHA_TYPE) \
-				-inkey $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/sigkeys/vble-qti.key \
-				-out boot.img.sig -pkeyopt digest:$(TARGET_SHA_TYPE) -pkeyopt rsa_padding_mode:pkcs1; \
-		dd if=/dev/zero of=boot.img.sig.padded bs=2048 count=1 ;\
-		dd if=boot.img.sig of=boot.img.sig.padded conv=notrunc; \
-		cat boot.img.nonsecure boot.img.sig.padded > boot.img.secure; \
-		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
-		mv -f boot.img.secure boot.img; \
-	)
-endef
 
 ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.img), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
 define Ota/Build/ext4
@@ -279,9 +253,6 @@ define Image/mkfs/ext4
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
 		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB);\
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR_AB)/boot.img ]; do sleep 1; done; \
-	fi
-	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		$(call Image/ReGenerateBootImage); \
 	fi
 	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/ext4)
