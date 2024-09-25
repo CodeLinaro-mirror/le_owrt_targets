@@ -19,7 +19,7 @@ define Profile/mbb
 	PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-                $(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSINTERNAL) $(QTISENSORSPROP)  \
+                $(QTICOREINTERNAL) $(QTISENSORSINTERNAL) $(QTISENSORSPROP)  \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
@@ -35,7 +35,7 @@ define Profile/cpe
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		$(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP)  \
+		$(QTICOREINTERNAL) $(QTISENSORSPROP)  \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
