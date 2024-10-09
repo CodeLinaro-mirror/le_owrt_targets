@@ -66,7 +66,7 @@ define Profile/cpe-v1
                 $(QTIIPQ) $(QTIIPQPROP) $(QTISSDK) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
-                $(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) \
+                $(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSPROP) $(QTIMSDCPROP) $(QTIIPQEZMESH) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) \
                 -iw-full
 endef
