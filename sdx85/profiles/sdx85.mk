@@ -20,6 +20,7 @@ define Profile/mbb
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTICOREINTERNAL) $(QTISENSORSINTERNAL) $(QTISENSORSPROP)  \
+                $(QTIBT) $(QTIBTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
