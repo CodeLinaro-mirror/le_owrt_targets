@@ -52,10 +52,8 @@ define Profile/mbb-min
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-                $(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTISSDK) \
-                $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
-                $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) $(QTISENSORSPROP) $(QTIMSDCPROP) \
-                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp $(RECOVERYUPDATER)
+                $(QTISENSORSPROP) \
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp
 endef
 
 define Profile/mbb-min/Description
