@@ -30,7 +30,7 @@ SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
 EXT4_IMAGE_SIZE = 288358400
-else ifeq ($(OWRT_VERSION),24.00)
+else ifeq ($(OWRT_VERSION),24.10)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
 EXT4_IMAGE_SIZE = 288358400
 endif
