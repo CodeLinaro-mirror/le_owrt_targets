@@ -68,10 +68,9 @@ define Profile/mbb-512
         NAME:=Qualcomm Technologies Inc., Kobuk' MBB 512MB Profile
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
-                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTINTERNAL) \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) \
-                $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
-                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config -lftp $(RECOVERYUPDATER)
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config -lftp
 endef
 
 define Profile/mbb-512/Description
