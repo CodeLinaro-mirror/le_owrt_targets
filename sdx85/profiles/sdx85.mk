@@ -20,7 +20,7 @@ define Profile/mbb
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTICOREINTERNAL) $(QTISENSORSINTERNAL) $(QTISENSORSPROP)  \
-                $(QTIBT) $(QTIBTPROP) \
+                $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
@@ -36,7 +36,7 @@ define Profile/cpe
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		$(QTICOREINTERNAL) $(QTISENSORSPROP)  \
+		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
@@ -53,7 +53,7 @@ define Profile/mbb-min
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-                $(QTISENSORSPROP) \
+                $(QTISENSORSPROP) $(QTINTERNAL) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp
 endef
 
@@ -69,7 +69,7 @@ define Profile/mbb-512
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-                $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) \
+                $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) $(QTINTERNAL) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config -lftp
 endef
 
