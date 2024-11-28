@@ -84,9 +84,9 @@ define Profile/mbb-min
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-                $(QTIDATAM2) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTISSDK) \
+                $(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTISSDK) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
-                $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) $(QTISENSORSPROP) $(QTIMSDCPROP) \
+                $(QTICOREINTERNAL) $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) $(QTISENSORSPROP) $(QTIMSDCPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp $(RECOVERYUPDATER) -bind -bind-dig
 endef
 
@@ -103,7 +103,7 @@ define Profile/mbb-512
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) \
-                $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+                $(QTICOREINTERNAL) $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config -lftp -rproc-tracing $(RECOVERYUPDATER) -bind -bind-dig
 endef
 
