@@ -80,10 +80,24 @@ RECOVERY_ROOTFS_PATH = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recov
 SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 
+# Convert OWRT_VERSION to an integer for comparison
+OWRT_VERSION_INT := $(shell echo $(OWRT_VERSION) | sed 's/\.//g')
+
+# Define the threshold version as an integer
+THRESHOLD_VERSION_INT := 2400
+
+define LicenseCheck
+	@if [ $(OWRT_VERSION_INT) -ge $(THRESHOLD_VERSION_INT) ]; then \
+		rm -f $(IMAGE_PRODUCTS_DIR)/Error_license.log; \
+		mkdir -p $(IMAGE_PRODUCTS_DIR); \
+		sh ./license_check.sh $(PROFILE) $(BOARD) $(TOPDIR) 2>&1 | tee $(IMAGE_PRODUCTS_DIR)/Error_license.log; \
+		sed '/Error/ { q 1 }' $(IMAGE_PRODUCTS_DIR)/Error_license.log || { echo "License error, terminating the build..."; }; \
+	fi
+endef
+
 ifeq ($(PROFILE),recovery)
 define Image/Prepare
-	rm -f $(TOPDIR)/all_license.log
-	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
+	$(call LicenseCheck)
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
@@ -127,8 +141,7 @@ endef
 else
 
 define Image/Prepare
-	rm -f $(TOPDIR)/all_license.log
-	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
+	$(call LicenseCheck)
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
@@ -177,7 +190,7 @@ define Image/GenerateExt4Images
 		rm -rf ${IMAGE_ROOTFS}$(1)/etc/uci-defaults/13_fix-group-user; \
 	)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		$(CP) $(TOPDIR)/src/kernel-$(LINUX_VERSION)/out/msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig/msm-kernel/certs/verity* \
+		$(CP) $(TOPDIR)/src/kernel-$(LINUX_VERSION)/out/msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig/dist/verity* \
 		$(IMAGE_PRODUCTS_DIR)$(1) ; \
 	fi
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
@@ -238,6 +251,31 @@ define Image/GenerateBootImage
 
 endef
 
+define Image/ReGenerateBootImage
+	(cd $(IMAGE_PRODUCTS_DIR); \
+		$(CP) boot.img boot.img.nonsecure; \
+		openssl dgst -$(TARGET_SHA_TYPE) -binary boot.img.nonsecure > boot.img.$(TARGET_SHA_TYPE); \
+		openssl pkeyutl -sign -in boot.img.$(TARGET_SHA_TYPE) \
+				-inkey $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/sigkeys/vble-qti.key \
+				-out boot.img.sig -pkeyopt digest:$(TARGET_SHA_TYPE) -pkeyopt rsa_padding_mode:pkcs1; \
+		dd if=/dev/zero of=boot.img.sig.padded bs=2048 count=1 ;\
+		dd if=boot.img.sig of=boot.img.sig.padded conv=notrunc; \
+		cat boot.img.nonsecure boot.img.sig.padded > boot.img.secure; \
+		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
+		mv -f boot.img.secure boot.img; \
+		cd $(IMAGE_PRODUCTS_DIR_AB); \
+		$(CP) boot.img boot.img.nonsecure; \
+		openssl dgst -$(TARGET_SHA_TYPE) -binary boot.img.nonsecure > boot.img.$(TARGET_SHA_TYPE); \
+		openssl pkeyutl -sign -in boot.img.$(TARGET_SHA_TYPE) \
+				-inkey $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/sigkeys/vble-qti.key \
+				-out boot.img.sig -pkeyopt digest:$(TARGET_SHA_TYPE) -pkeyopt rsa_padding_mode:pkcs1; \
+		dd if=/dev/zero of=boot.img.sig.padded bs=2048 count=1 ;\
+		dd if=boot.img.sig of=boot.img.sig.padded conv=notrunc; \
+		cat boot.img.nonsecure boot.img.sig.padded > boot.img.secure; \
+		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
+		mv -f boot.img.secure boot.img; \
+	)
+endef
 
 ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.img), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
 define Ota/Build/ext4
@@ -256,6 +294,9 @@ define Image/mkfs/ext4
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
 		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB);\
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR_AB)/boot.img ]; do sleep 1; done; \
+	fi
+	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
+		$(call Image/ReGenerateBootImage); \
 	fi
 	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/ext4)
