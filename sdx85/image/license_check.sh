@@ -11,9 +11,9 @@ BUILD_DIR="$TOPDIR/build_dir/target-aarch64_cortex-a53_musl/"
 
 check_packages_license() {
     local directory="$1"
-    local whitelist=("lftp" "libelf1")  # Add the package names you want to whitelist
+    local whitelist=("lftp" "libelf1" "pbr-iptables")  # Add the package names you want to whitelist
     # exception_list: List of packages without licenses. Ensure each package's Makefile includes the PACKAGE_LICENSE variable with the correct license information.
-    local exception_list=( "core-include" "diag" "diag-noship" "diag-router" "kpigen" "libhealthmon" "postboot" "qmi-framework" "rproc-tracing" "sec-config" "time-genoff" "time-services" "user_permissions" "sat_module")
+    local exception_list=( "core-include" "diag" "diag-noship" "diag-router" "kpigen" "libhealthmon" "postboot" "qmi-framework" "rproc-tracing" "sec-config" "time-genoff" "time-services" "user_permissions" "kmod-sat_module" "security-tests")
     if [ ! -d "$directory" ]; then
         echo "Directory $directory does not exist."
         exit 1
