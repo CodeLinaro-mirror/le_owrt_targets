@@ -91,7 +91,7 @@ define LicenseCheck
 		rm -f $(IMAGE_PRODUCTS_DIR)/Error_license.log; \
 		mkdir -p $(IMAGE_PRODUCTS_DIR); \
 		sh ./license_check.sh $(PROFILE) $(BOARD) $(TOPDIR) 2>&1 | tee $(IMAGE_PRODUCTS_DIR)/Error_license.log; \
-		sed '/Error/ { q 1 }' $(IMAGE_PRODUCTS_DIR)/Error_license.log || { echo "License error, terminating the build..."; }; \
+		sed '/Error/ { q 1 }' $(IMAGE_PRODUCTS_DIR)/Error_license.log || { echo "License error, terminating the build..."; exit 1; }; \
 	fi
 endef
 
