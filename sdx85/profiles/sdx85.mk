@@ -51,6 +51,7 @@ define Profile/cpe
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		$(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
+		$(QTIIPQ) $(QTIIPQPROP) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
