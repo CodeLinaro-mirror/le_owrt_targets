@@ -12,7 +12,7 @@ KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
 UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
-USERDATA_SIZE_EXT4 = 2684354560
+USERDATA_SIZE_EXT4 = 356515840
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
 UBINIZE_CFG = ubinize-$(BOARD).cfg
 UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
@@ -29,14 +29,17 @@ SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
-EXT4_IMAGE_SIZE = 314572800
+EXT4_IMAGE_SIZE = 288358400
+else ifeq ($(OWRT_VERSION),24.00)
+SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
+EXT4_IMAGE_SIZE = 288358400
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
 endif
 
-ROOTFS_VOLUME_SIZE_AB = "115MiB"
+ROOTFS_VOLUME_SIZE_AB = "95MiB"
 SYSTEM_VOLUME_SIZE_G = "150MiB"
 SYSTEM_VOLUME_SIZE = "110MiB"
 SYSTEM_VOLUME_SIZE_512 = "66MiB"
@@ -48,6 +51,7 @@ ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_512)
 else
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
 endif
+
 
 ifeq ($(TARGET_VARIANT),perf)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe no_console_suspend=1 loglevel=0"
@@ -76,10 +80,24 @@ RECOVERY_ROOTFS_PATH = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recov
 SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 
+# Convert OWRT_VERSION to an integer for comparison
+OWRT_VERSION_INT := $(shell echo $(OWRT_VERSION) | sed 's/\.//g')
+
+# Define the threshold version as an integer
+THRESHOLD_VERSION_INT := 2400
+
+define LicenseCheck
+	@if [ $(OWRT_VERSION_INT) -ge $(THRESHOLD_VERSION_INT) ]; then \
+		rm -f $(IMAGE_PRODUCTS_DIR)/Error_license.log; \
+		mkdir -p $(IMAGE_PRODUCTS_DIR); \
+		sh ./license_check.sh $(PROFILE) $(BOARD) $(TOPDIR) 2>&1 | tee $(IMAGE_PRODUCTS_DIR)/Error_license.log; \
+		sed '/Error/ { q 1 }' $(IMAGE_PRODUCTS_DIR)/Error_license.log || { echo "License error, terminating the build..."; }; \
+	fi
+endef
+
 ifeq ($(PROFILE),recovery)
 define Image/Prepare
-	rm -f $(TOPDIR)/all_license.log
-	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
+	$(call LicenseCheck)
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
@@ -123,8 +141,7 @@ endef
 else
 
 define Image/Prepare
-	rm -f $(TOPDIR)/all_license.log
-	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
+	$(call LicenseCheck)
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
@@ -164,9 +181,7 @@ endif
 
 define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
-	$(call Image/GenerateUbiImages,-ab)
 	$(call Ota/Build/ubi,4k)
-	$(call Ota/Build/ubi_ab,4k)
 endef
 
 define Image/GenerateExt4Images
@@ -175,7 +190,7 @@ define Image/GenerateExt4Images
 		rm -rf ${IMAGE_ROOTFS}$(1)/etc/uci-defaults/13_fix-group-user; \
 	)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		$(CP) $(TOPDIR)/src/kernel-$(LINUX_VERSION)/out/msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig/msm-kernel/certs/verity* \
+		$(CP) $(TOPDIR)/src/kernel-$(LINUX_VERSION)/out/msm-kernel-$(KERNEL_PLATFORM_TARGET)-$(TARGET_VARIANT)_defconfig/dist/verity* \
 		$(IMAGE_PRODUCTS_DIR)$(1) ; \
 	fi
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
