@@ -77,8 +77,13 @@ endif
 RECOVERY_IMGS_PATH = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/recovery
 RECOVERY_ROOTFS_PATH = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recovery/root-$(BOARD)
 
+ifeq ($(CONFIG_PACKAGE_selinux-policy),y)
 SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
+else
+SELINUX_UBI_OPTS :=
+SELINUX_EXT4_OPTS :=
+endif
 
 # Convert OWRT_VERSION to an integer for comparison
 OWRT_VERSION_INT := $(shell echo $(OWRT_VERSION) | sed 's/\.//g')
