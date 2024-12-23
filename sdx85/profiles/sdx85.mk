@@ -19,6 +19,7 @@ define Profile/mbb
 	PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+                $(QTIAUDIO) $(QTIAUDIOALGOS) \
                 $(QTICOREINTERNAL) $(QTISENSORSINTERNAL) $(QTISENSORSPROP)  \
                 $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) $(QTIWLAN) $(QTIWLANPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
