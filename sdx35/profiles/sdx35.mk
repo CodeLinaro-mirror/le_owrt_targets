@@ -60,7 +60,7 @@ define Profile/m2
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
 		$(QTIPPATPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) -bind -bind-dig
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc subsystem-ramdump -swconfig $(RECOVERYUPDATER) -bind -bind-dig
 endef
 
 define Profile/m2/Description

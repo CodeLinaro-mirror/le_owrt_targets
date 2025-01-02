@@ -30,7 +30,7 @@ SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
 EXT4_IMAGE_SIZE = 288358400
-else ifeq ($(OWRT_VERSION),24.00)
+else ifeq ($(OWRT_VERSION),24.10)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
 EXT4_IMAGE_SIZE = 288358400
 endif
@@ -77,13 +77,32 @@ endif
 RECOVERY_IMGS_PATH = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/recovery
 RECOVERY_ROOTFS_PATH = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recovery/root-$(BOARD)
 
+ifeq ($(CONFIG_PACKAGE_selinux-policy),y)
 SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
+else
+SELINUX_UBI_OPTS :=
+SELINUX_EXT4_OPTS :=
+endif
+
+# Convert OWRT_VERSION to an integer for comparison
+OWRT_VERSION_INT := $(shell echo $(OWRT_VERSION) | sed 's/\.//g')
+
+# Define the threshold version as an integer
+THRESHOLD_VERSION_INT := 2400
+
+define LicenseCheck
+	@if [ $(OWRT_VERSION_INT) -ge $(THRESHOLD_VERSION_INT) ]; then \
+		rm -f $(IMAGE_PRODUCTS_DIR)/Error_license.log; \
+		mkdir -p $(IMAGE_PRODUCTS_DIR); \
+		sh ./license_check.sh $(PROFILE) $(BOARD) $(TOPDIR) 2>&1 | tee $(IMAGE_PRODUCTS_DIR)/Error_license.log; \
+		sed '/Error/ { q 1 }' $(IMAGE_PRODUCTS_DIR)/Error_license.log || { echo "License error, terminating the build..."; exit 1; }; \
+	fi
+endef
 
 ifeq ($(PROFILE),recovery)
 define Image/Prepare
-	rm -f $(TOPDIR)/all_license.log
-	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
+	$(call LicenseCheck)
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
@@ -127,8 +146,7 @@ endef
 else
 
 define Image/Prepare
-	rm -f $(TOPDIR)/all_license.log
-	sh ./license_check.sh 2>&1 | tee $(TOPDIR)/all_license.log
+	$(call LicenseCheck)
 	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
 	mkdir -p $(IMAGE_PRODUCTS_DIR)
 	mkdir -p ${IMAGE_ROOTFS}/cache
