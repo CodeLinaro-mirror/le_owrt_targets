@@ -29,7 +29,7 @@ SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
-EXT4_IMAGE_SIZE = 314572800
+EXT4_IMAGE_SIZE = 408944640
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
