@@ -21,6 +21,7 @@ define Profile/mbb
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTIAUDIO) $(QTIAUDIOALGOS) \
                 $(QTICOREINTERNAL) $(QTISENSORSINTERNAL) $(QTISENSORSPROP)  \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) $(QTIWLAN) $(QTIWLANPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
@@ -38,6 +39,7 @@ define Profile/cpe
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
 		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
@@ -54,6 +56,7 @@ define Profile/mbb-min
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+                $(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTISENSORSPROP) $(QTINTERNAL) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp
 endef
