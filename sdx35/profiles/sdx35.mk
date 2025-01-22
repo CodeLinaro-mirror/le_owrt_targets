@@ -5,6 +5,26 @@ ifeq ($(CONFIG_OTA_RECOVERY_UPDATE),y)
 RECOVERYUPDATER=recovery-updater
 endif
 
+define Profile/m2-128m
+	NAME:=Qualcomm Technologies Inc., Kuno Profile
+	PACKAGES:=$(OPENWRT_STANDARD) \
+		$(COREBSP_UTILS) $(UTILS) \
+		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTINTERNAL) $(QTISSDK) \
+		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+		$(QTICOREINTERNAL) \
+		$(QTIDATAINTERNAL) \
+		$(QTIPPATPROP) \
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) -bind -bind-dig
+endef
+
+define Profile/m2-128m/Description
+	M.2 sdx35 package set configuration for 128M device.
+	Enables complete set of modules for sdx35 M.2 target.
+endef
+
+$(eval $(call Profile,m2-128m))
+
 define Profile/mbb-128m
 	NAME:=Qualcomm Technologies Inc., Kuno Profile
 	PACKAGES:=$(OPENWRT_STANDARD) \
@@ -60,7 +80,7 @@ define Profile/m2
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
 		$(QTIPPATPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER) -bind -bind-dig
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc subsystem-ramdump -swconfig $(RECOVERYUPDATER) -bind -bind-dig
 endef
 
 define Profile/m2/Description
