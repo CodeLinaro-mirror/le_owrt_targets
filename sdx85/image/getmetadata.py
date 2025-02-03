@@ -10,11 +10,11 @@ Following are done in this file
     4. repack and  generate the  new sparse image
     5. update the kernel cmdline with new arg with boot args
 Note: currently the file is not touching the main images it only copies
-      the image to /verity  and update the image over there . 
+      the image to /verity  and update the image over there .
       Going fwd thi will not be case and should be having only one set of image
       with noverity bootloader
       Kown issue , as this offline process done on verity folder if any thing goes
-      wrong during this script it is not going to block / stop main compilation 
+      wrong during this script it is not going to block / stop main compilation
       this is except as per desing and we still have non-verity images
 """
 import os
@@ -44,7 +44,7 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
     verity_fec_file  = system_images_dir +'/verity/verityFEC'
 
     for count  in range(94, 0, -1):
-        #  new image new metadata append and check 
+        #  new image new metadata append and check
         if os.path.exists(system_images_dir +'/verity/verity_meta_data.txt'):
             os.remove(system_images_dir +'/verity/verity_meta_data.txt')
             os.remove(system_images_dir +'/verity/verityHash')
@@ -77,17 +77,16 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
         file_raw.close()
 
 
- 
 # Check if size is within the range
         systemSize = os.stat(system_image_raw_path).st_size
         print('--> done with new verity image --rechecking %d' %(systemSize))
         if int(systemSize) > int(SYSTEM_IMAGE_ROOTFS_SIZE) :
 #           print('Size mismatch '+ str(systemSize) +' Vs '+ str(SYSTEM_IMAGE_ROOTFS_SIZE)+'...recreating unsparse image.')
             #os.remove(system_images_dir + '/verity/system.img.raw')
-# creating new image with new size            
+# creating new image with new size
             adjustedSystemSize= adjust_system_size_for_verity (count)
 #           print( '-->'+str(count) +'.....' + str(adjustedSystemSize))
-            cmd = 'fakeroot '+staging_dir_hostpkg+'/bin/make_ext4fs '+ SELINUX_EXT4_OPTS + ' -B ' +system_images_dir+'/system.map -a / -b 4096  -l '+ str(adjustedSystemSize)+' '+ system_image_raw_path +' ' + rootfs_dir 
+            cmd = 'fakeroot '+staging_dir_hostpkg+'/bin/make_ext4fs '+ SELINUX_EXT4_OPTS + ' -B ' +system_images_dir+'/system.map -a / -b 4096  -l '+ str(adjustedSystemSize)+' '+ system_image_raw_path +' ' + rootfs_dir
 #           result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
             result = subprocess.run(cmd, shell=True)
 #           print('result -->'+ str(result.returncode) +result.stdout.decode('utf-8'))
@@ -97,27 +96,17 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
                 print(' resizing of system image ..' )
                 continue
         else:
-#       Image meets the requirements so bailing out 
+#       Image meets the requirements so bailing out
             count = 0
             break
-  
+
 # Calculate offset
     hash_offset = adjustedSystemSize
     hash_size=os.path.getsize(system_images_dir +'/verity/verityHash')
-    fec_offset = (int(hash_offset) + int(hash_size)) // 4096 
+    fec_offset = (int(hash_offset) + int(hash_size)) // 4096
 ## Creating the verity cmdline that is requried .
     ROOT_SECTORS = int(Datablocks) * 8
-    with open(system_images_dir +'/verity/cmdline', 'w') as cmdline_file:
-        vcmdline = 'verity=\\"'+ str(ROOT_SECTORS)+' '+ str(Datablocks.strip())+' '+  str((Roothash).strip()) + ' '+ str(fec_offset) + ' 1\\"'
-        cmdline_file.write(vcmdline)
-        cmdline_file.close()
 
-# need update the metadata file with this details         
-#    print("Appending the images ")
-    with open(system_images_dir+'/verity/verity_meta_data.txt', 'a') as u_metadata:
-         u_metadata.write('fec_offset      '+ str(fec_offset))
-         u_metadata.write('\nhash_offset      '+ str( hash_offset))
-         u_metadata.close()
 # Convert to sparse image
     img2simg = staging_dir_hostpkg + '/bin/img2simg'
     cmd =  img2simg + " %s %s " % (system_images_dir+'/verity/system.img.raw', system_images_dir + '/system.img')
@@ -128,10 +117,26 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
     with open(system_images_dir+'/verity/roothash.txt', 'w' ) as  hash_text:
         hash_text.write(Roothash)
         hash_text.close()
-#copy the certs which keep updating with kernel build 
+#copy the certs which keep updating with kernel build
     cmd =  'openssl smime -sign -nocerts -noattr -binary  -in '+system_images_dir+'/verity/roothash.txt -inkey '+ system_images_dir+'/verity_key.pem  -signer '+system_images_dir+'/verity_cert.pem  -outform der -out '+ system_images_dir+'/verity/verity_sig.txt'
     ret = subprocess.call(cmd, shell=True)
 
+    cmd = 'od -tx1 -An '+ system_images_dir +'/verity/verity_sig.txt |tr -d ' +"\' \n\'"
+    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    root_hash_sig_key_value = stdout.decode().strip()
+
+    with open(system_images_dir +'/verity/cmdline', 'w') as cmdline_file:
+        vcmdline = 'verity=\\"'+ str(ROOT_SECTORS)+' '+ str(Datablocks.strip())+' '+  str((Roothash).strip()) + ' '+ str(fec_offset) +' '+str(root_hash_sig_key_value) +' 1\\"'
+        cmdline_file.write(vcmdline)
+        cmdline_file.close()
+
+        # need update the metadata file with this details
+        #    print("Appending the images ")
+        with open(system_images_dir+'/verity/verity_meta_data.txt', 'a') as u_metadata:
+            u_metadata.write('fec_offset      '+ str(fec_offset))
+            u_metadata.write('\nhash_offset      '+ str( hash_offset))
+            u_metadata.close()
 
 
 def generate_boot_images(kdir,kcmdline,kernel_baseaddr, out_images_path):
@@ -139,7 +144,7 @@ def generate_boot_images(kdir,kcmdline,kernel_baseaddr, out_images_path):
            vcmdline = c_file.read()
            c_file.close()
      print("Veritycmdline =" + vcmdline)
-     cmdline= kcmdline +' '+'dm-mod.waitfor=/dev/dm-0'+' '+vcmdline
+     cmdline= kcmdline +' '+vcmdline+' '+'dm_verity.require_signatures=1 '
    #  os.chdir(kdir)
    #  cmd = 'build-tools/mkbootimg/mkbootimg.py --kernel Image 	--cmdline "' +cmdline+'" --pagesize 4096 --base '+kernel_baseaddr + ' --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb ' + 'dtb.img --output '+ out_images_path+'/boot.img'
      cmd = kdir+ '/build-tools/mkbootimg/mkbootimg.py  --kernel '+ kdir + '/Image --cmdline  "' + cmdline+ '" --pagesize 4096 --base ' + str(kernel_baseaddr)+' '+' --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb '+ kdir + '/dtb.img --output '+ out_images_path+'/boot.img'
@@ -188,5 +193,5 @@ if __name__ == "__main__":
         system_image_raw_path = system_images_dir + '/verity/system.img.raw'
         dest = shutil.copyfile(system_images_dir+'/system.img.raw', system_image_raw_path)
         system_image_raw_path = system_images_dir + '/verity/system.img.raw'
-        append_verity_metadata_to_system_image2(system_image_raw_path, system_images_dir, staging_dir_hostpkg, rootfs_dir,kdir ) 
- 
+        append_verity_metadata_to_system_image2(system_image_raw_path, system_images_dir, staging_dir_hostpkg, rootfs_dir,kdir )
+
