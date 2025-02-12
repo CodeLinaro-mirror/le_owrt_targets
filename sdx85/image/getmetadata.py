@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved
+# Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 """
@@ -27,7 +27,7 @@ import math
 FIXED_SALT="aee087a5be3b982978c923f566a94613496b417f2af592639bc80d141e34dfe7"
 SECTOR_SIZE=512
 BLOCK_SIZE=4096
-FEC_ROOTS=3
+FEC_ROOTS=2
 VERITY_ALGO = "sha256"
 
 def adjust_system_size_for_verity (count):
