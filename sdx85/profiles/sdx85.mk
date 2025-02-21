@@ -4,6 +4,7 @@ include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
 include $(TOPDIR)/owrt-qti-telsdk/qtitelsdk.mk
 include $(TOPDIR)/owrt-qti-telsdk-prop/qtitelsdkprop.mk
+include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
 
 # include mk files available only in internal builds
 ifneq ($(EXTERNAL_BUILD),1)
@@ -29,6 +30,7 @@ define Profile/mbb
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
                 $(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
@@ -50,6 +52,7 @@ define Profile/cpe
 		$(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
@@ -70,6 +73,7 @@ define Profile/mbb-min
                 $(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTISENSORSPROP) $(QTINTERNAL) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp
 endef
 
@@ -87,6 +91,7 @@ define Profile/mbb-512
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) $(QTINTERNAL) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config \
                 -lftp -rproc-tracing -kpigen
 endef
