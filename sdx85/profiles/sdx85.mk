@@ -27,6 +27,7 @@ define Profile/mbb
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
                 $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) $(QTIWLAN) $(QTIWLANPROP) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+                $(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
@@ -46,6 +47,7 @@ define Profile/cpe
 		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
+		$(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
