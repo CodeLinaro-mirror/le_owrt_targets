@@ -145,6 +145,7 @@ define Image/Build/ubifs
 	$(CP) ./ubinize-sdx35-2k.cfg $(KDIR)
 	$(CP) ./ubinize-sdx35-128m.cfg $(KDIR)
 	$(CP) ./ubinize-sdx35-128m-2k.cfg $(KDIR)
+	$(CP) ./ubinize-sdx35-m2-128m-2k.cfg $(KDIR)
 ifeq ($(PROFILE), mbb)
 	$(call Image/AB/GenerateABRootfs)
 	$(CP) ./ubinize-sdx35-ab.cfg $(KDIR)
@@ -170,10 +171,16 @@ endif
 		fakeroot $(STAGING_DIR_HOST)/bin/ubinize -o sysfs-2k-squash.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-2k-squashfs.cfg; \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs.ubi -m 4096 -p 256KiB -s 4096 ubinize-sdx35.cfg; \
 	)
-	( if [ "$(PROFILE)" == "mbb-128m" ] || [ "$(PROFILE)" == "m2-128m" ]; then \
+	( if [ "$(PROFILE)" == "mbb-128m" ]; then \
 	(cd $(KDIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-2k.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-128m-2k.cfg; \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs.ubi -m 4096 -p 256KiB -s 4096 ubinize-sdx35-128m.cfg; \
+	); \
+	fi; \
+	)
+	( if [ "$(PROFILE)" == "m2-128m" ]; then \
+	(cd $(KDIR); \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o sysfs-2k.ubi -m 2048 -p 128KiB -s 2048 ubinize-sdx35-m2-128m-2k.cfg; \
 	); \
 	fi; \
 	)
