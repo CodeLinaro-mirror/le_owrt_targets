@@ -49,7 +49,6 @@ define Profile/cpe
 		$(QTITELSDK) $(QTITELSDKPROP) \
 		$(QTIIPQ) $(QTIIPQPROP) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-		$(QTIIPQ_6_6) $(QTIIPQPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
