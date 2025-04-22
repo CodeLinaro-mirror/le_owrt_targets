@@ -188,6 +188,7 @@ define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
 	$(call Image/GenerateUbiImages,-ab)
 	$(call Ota/Build/ubi,4k)
+	$(call Ota/Build/ubi_ab,4k)
 endef
 
 define Image/GenerateExt4Images

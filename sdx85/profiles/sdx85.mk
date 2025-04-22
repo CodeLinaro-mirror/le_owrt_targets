@@ -27,6 +27,7 @@ define Profile/mbb
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
                 $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) $(QTIWLAN) $(QTIWLANPROP) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+                $(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
@@ -46,7 +47,9 @@ define Profile/cpe
 		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
+		$(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
+		$(QTIIPQ) $(QTIIPQPROP) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
@@ -85,7 +88,8 @@ define Profile/mbb-512
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) $(QTINTERNAL) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
-                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config -lftp
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config \
+                -lftp -rproc-tracing -kpigen
 endef
 
 define Profile/mbb-512/Description
@@ -102,7 +106,7 @@ define Profile/recovery
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTISENSORSPROP) \
                 -ipa_fws -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
                 -usb-composition usb-composition-recovery -initmss -sign_abl applypatch bsdiff-ota edify \
-                libdivsufsort librecovery-updater-msm recovery updater -rproc-tracing -lftp
+                libdivsufsort librecovery-updater-msm recovery updater -rproc-tracing -lftp -kpigen
 endef
 
 define Profile/recovery/Description
