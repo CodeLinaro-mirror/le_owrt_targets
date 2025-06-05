@@ -65,29 +65,24 @@ endef
 
 $(eval $(call Profile,cpe))
 
-define Profile/cpe-lbr
-        NAME:=Qualcomm Technologies Inc., Kobuk' CPE-LBR Profile
+define Profile/cpe-tarang
+        NAME:=Qualcomm Technologies Inc., Kobuk' CPE-TARANG Profile
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
-                $(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
-                $(QTIPERFPROP) \
-                $(QTITELSDK) $(QTITELSDKPROP) \
-                $(QTIIPQ) $(QTIIPQPROP) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
                 -iw-full
 endef
 
-define Profile/cpe-lbr/Description
-        CPE_LBR sdx85 package set configuration.
+define Profile/cpe-tarang/Description
+        CPE_TARANG sdx85 package set configuration.
         Enables complete set of modules for sdx85 target.
 endef
 
-$(eval $(call Profile,cpe-lbr))
+$(eval $(call Profile,cpe-tarang))
 
 
 define Profile/mbb-min
