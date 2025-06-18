@@ -72,6 +72,8 @@ define Profile/cpe-tarang
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
+		$(QTIPERFPROP) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
                 -iw-full
