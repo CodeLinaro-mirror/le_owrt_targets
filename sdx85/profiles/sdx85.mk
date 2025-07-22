@@ -24,7 +24,7 @@ define Profile/mbb
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTIAUDIO) $(QTIAUDIOALGOS) \
                 $(QTICOREINTERNAL) $(QTISENSORSINTERNAL) $(QTISENSORSPROP)  \
-		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) $(QTIRILPROP) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
                 $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) $(QTIWLAN) $(QTIWLANPROP) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
@@ -46,7 +46,7 @@ define Profile/cpe
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
+		$(QTICOREINTERNAL) $(QTINTERNAL) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		$(QTIPERFPROP) \
@@ -64,6 +64,29 @@ define Profile/cpe/Description
 endef
 
 $(eval $(call Profile,cpe))
+
+define Profile/cpe-tarang
+        NAME:=Qualcomm Technologies Inc., Kobuk' CPE-TARANG Profile
+        PACKAGES:=$(OPENWRT_STANDARD) \
+                $(COREBSP_UTILS) $(UTILS) \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+                $(QTICOREINTERNAL) $(QTINTERNAL) \
+                $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
+		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTIPERFPROP) \
+                $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
+                -iw-full
+endef
+
+define Profile/cpe-tarang/Description
+        CPE_TARANG sdx85 package set configuration.
+        Enables complete set of modules for sdx85 target.
+endef
+
+$(eval $(call Profile,cpe-tarang))
+
 
 define Profile/mbb-min
         NAME:=Qualcomm Technologies Inc., Kobuk' MBB Minimal Profile
