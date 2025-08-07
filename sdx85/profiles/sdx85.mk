@@ -2,8 +2,6 @@ include $(TOPDIR)/owrt-qti-conf/sdx.mk
 include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
 include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
-include $(TOPDIR)/owrt-qti-telsdk/qtitelsdk.mk
-include $(TOPDIR)/owrt-qti-telsdk-prop/qtitelsdkprop.mk
 include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
 
 # include mk files available only in internal builds
@@ -29,7 +27,6 @@ define Profile/mbb
                 $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) $(QTIWLAN) $(QTIWLANPROP) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
                 $(QTIPERFPROP) \
-		$(QTITELSDK) $(QTITELSDKPROP) \
                 $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
@@ -50,7 +47,6 @@ define Profile/cpe
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		$(QTIPERFPROP) \
-		$(QTITELSDK) $(QTITELSDKPROP) \
 		$(QTIIPQ) $(QTIIPQPROP) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
@@ -64,6 +60,30 @@ define Profile/cpe/Description
 endef
 
 $(eval $(call Profile,cpe))
+
+define Profile/cpe-min
+	NAME:=Qualcomm Technologies Inc., Kobuk' CPE-MIN Profile
+	PACKAGES:=$(OPENWRT_STANDARD) \
+		$(COREBSP_UTILS) $(UTILS) \
+		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
+		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
+		$(QTIPERFPROP) \
+		$(QTITELSDK) $(QTITELSDKPROP) \
+		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
+		-iw-full
+endef
+
+define Profile/cpe-min/Description
+	CPE-MIN sdx85 package set configuration.
+	Enables complete set of modules for sdx85 target.
+endef
+
+$(eval $(call Profile,cpe-min))
 
 define Profile/cpe-tarang
         NAME:=Qualcomm Technologies Inc., Kobuk' CPE-TARANG Profile
@@ -97,7 +117,6 @@ define Profile/mbb-min
                 $(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTISENSORSPROP) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-		$(QTITELSDK) $(QTITELSDKPROP) \
                 $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp
 endef
