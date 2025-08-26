@@ -107,6 +107,28 @@ endef
 
 $(eval $(call Profile,cpe-tarang))
 
+define Profile/cpe-v1
+	NAME:=Qualcomm Technologies Inc., Kobuk' CPE-V1 Profile
+	PACKAGES:=$(OPENWRT_STANDARD) \
+		$(COREBSP_UTILS) $(UTILS) \
+		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+		$(QTICOREINTERNAL) $(QTINTERNAL) \
+		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
+		$(QTIPERFPROP) \
+		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
+		-iw-full
+endef
+
+define Profile/cpe-v1/Description
+	CPE-V1 sdx85 package set configuration.
+	Enables complete set of modules for sdx85 target.
+endef
+
+$(eval $(call Profile,cpe-v1))
 
 define Profile/mbb-min
         NAME:=Qualcomm Technologies Inc., Kobuk' MBB Minimal Profile
