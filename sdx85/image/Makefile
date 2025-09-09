@@ -12,7 +12,7 @@ KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
 UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
-USERDATA_SIZE_EXT4 = 356515840
+USERDATA_SIZE_EXT4 = 2548039680
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
 UBINIZE_CFG = ubinize-$(BOARD).cfg
 UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
@@ -32,14 +32,14 @@ SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
 EXT4_IMAGE_SIZE = 288358400
 else ifeq ($(OWRT_VERSION),24.10)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
-EXT4_IMAGE_SIZE =  408944640
+EXT4_IMAGE_SIZE =  477626880
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
 endif
 
-ROOTFS_VOLUME_SIZE_AB = "115MiB"
+ROOTFS_VOLUME_SIZE_AB = "120MiB"
 SYSTEM_VOLUME_SIZE_G = "150MiB"
 SYSTEM_VOLUME_SIZE = "110MiB"
 SYSTEM_VOLUME_SIZE_512 = "66MiB"
@@ -54,7 +54,7 @@ endif
 
 
 ifeq ($(TARGET_VARIANT),perf)
-KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe no_console_suspend=1 loglevel=0"
+KERNEL_CMDLINE = "ro rootwait console=ttynull androidboot.hardware=qcom msm_rtb.filter=0x237 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
 endif
 
 TARGET_SHA_TYPE = "sha256"
@@ -188,6 +188,7 @@ define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
 	$(call Image/GenerateUbiImages,-ab)
 	$(call Ota/Build/ubi,4k)
+	$(call Ota/Build/ubi_ab,4k)
 endef
 
 define Image/GenerateExt4Images

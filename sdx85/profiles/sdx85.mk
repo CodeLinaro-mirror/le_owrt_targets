@@ -2,8 +2,7 @@ include $(TOPDIR)/owrt-qti-conf/sdx.mk
 include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
 include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
-include $(TOPDIR)/owrt-qti-telsdk/qtitelsdk.mk
-include $(TOPDIR)/owrt-qti-telsdk-prop/qtitelsdkprop.mk
+include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
 
 # include mk files available only in internal builds
 ifneq ($(EXTERNAL_BUILD),1)
@@ -23,11 +22,12 @@ define Profile/mbb
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTIAUDIO) $(QTIAUDIOALGOS) \
                 $(QTICOREINTERNAL) $(QTISENSORSINTERNAL) $(QTISENSORSPROP)  \
-		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) $(QTIRILPROP) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
                 $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) $(QTIWLAN) $(QTIWLANPROP) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
-		$(QTITELSDK) $(QTITELSDKPROP) \
+                $(QTIPERFPROP) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
@@ -43,11 +43,13 @@ define Profile/cpe
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
+		$(QTICOREINTERNAL) $(QTINTERNAL) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
-		$(QTITELSDK) $(QTITELSDKPROP) \
+		$(QTIPERFPROP) \
+		$(QTIIPQ) $(QTIIPQPROP) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
@@ -59,6 +61,53 @@ endef
 
 $(eval $(call Profile,cpe))
 
+define Profile/cpe-min
+	NAME:=Qualcomm Technologies Inc., Kobuk' CPE-MIN Profile
+	PACKAGES:=$(OPENWRT_STANDARD) \
+		$(COREBSP_UTILS) $(UTILS) \
+		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
+		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
+		$(QTIPERFPROP) \
+		$(QTITELSDK) $(QTITELSDKPROP) \
+		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
+		-iw-full
+endef
+
+define Profile/cpe-min/Description
+	CPE-MIN sdx85 package set configuration.
+	Enables complete set of modules for sdx85 target.
+endef
+
+$(eval $(call Profile,cpe-min))
+
+define Profile/cpe-tarang
+        NAME:=Qualcomm Technologies Inc., Kobuk' CPE-TARANG Profile
+        PACKAGES:=$(OPENWRT_STANDARD) \
+                $(COREBSP_UTILS) $(UTILS) \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+                $(QTICOREINTERNAL) $(QTINTERNAL) \
+                $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
+		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTIPERFPROP) \
+                $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
+                -iw-full
+endef
+
+define Profile/cpe-tarang/Description
+        CPE_TARANG sdx85 package set configuration.
+        Enables complete set of modules for sdx85 target.
+endef
+
+$(eval $(call Profile,cpe-tarang))
+
+
 define Profile/mbb-min
         NAME:=Qualcomm Technologies Inc., Kobuk' MBB Minimal Profile
         PACKAGES:=$(OPENWRT_STANDARD) \
@@ -67,7 +116,8 @@ define Profile/mbb-min
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
                 $(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTISENSORSPROP) $(QTINTERNAL) \
-		$(QTITELSDK) $(QTITELSDKPROP) \
+                $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp
 endef
 
@@ -85,6 +135,8 @@ define Profile/mbb-512
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
                 $(QTISENSORSPROP) $(QTIDATA512M) $(QTIDATAPROP512M) $(QTINTERNAL) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+                $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -qdss_config \
                 -lftp -rproc-tracing -kpigen
 endef
