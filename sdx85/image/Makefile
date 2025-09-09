@@ -12,7 +12,8 @@ KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
 UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
-USERDATA_SIZE_EXT4 = 2548039680
+USERDATA_SIZE_EXT4 = 3328999654
+USERDATA_SIZE_EXT4-ab = 2548039680
 ifneq ($(PRPL_VERSION),)
 USERDATA_SIZE_EXT4 = 1578400482
 endif
@@ -240,7 +241,7 @@ define Image/GenerateExt4Images
 		$(IMAGE_PRODUCTS_DIR)$(1) ; \
 	fi
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4) userdata.img $(IMAGE_ROOTFS)$(1)/data \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4$(1)) userdata.img $(IMAGE_ROOTFS)$(1)/data \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /systemrw -s -b 4096 -l $(SYSTEMRW_IMAGE_ROOTFS_SIZE) systemrw.img $(IMAGE_ROOTFS)$(1)/overlay \
