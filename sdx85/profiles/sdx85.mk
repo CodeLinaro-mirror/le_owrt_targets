@@ -1,8 +1,10 @@
 include $(TOPDIR)/owrt-qti-conf/sdx.mk
-include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
+ifeq ($(PRPL_VERSION),)
+-include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
+-include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
+endif
 include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
-include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
 
 # include mk files available only in internal builds
 ifneq ($(EXTERNAL_BUILD),1)
