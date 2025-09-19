@@ -2,6 +2,8 @@ include $(TOPDIR)/owrt-qti-conf/sdx.mk
 ifeq ($(PRPL_VERSION),)
 -include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
 -include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
+include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
+include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
 endif
 include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
@@ -10,8 +12,6 @@ include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
 ifneq ($(EXTERNAL_BUILD),1)
 	include $(TOPDIR)/owrt-qti-sensors-internal/qtisensorsinternal.mk
 endif
-include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
-include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
 
 ifeq ($(CONFIG_OTA_RECOVERY_UPDATE),y)
 RECOVERYUPDATER=recovery-updater
