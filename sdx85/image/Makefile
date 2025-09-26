@@ -27,6 +27,12 @@ BUILD_PROP = build.prop
 PERSIST_SIZE_EXT4 = 8192KB
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
+ifneq ($(PRPL_VERSION),)
+LCM_SIZE_EXT4 = 1572864KB
+CFG_SIZE_EXT4 =16384KB
+UBINIZE_CFG_LCM = ubinize-$(BOARD)-lcm.cfg
+UBINIZE_CFG_CFG = ubinize-$(BOARD)-cfg.cfg
+endif
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
 EXT4_IMAGE_SIZE = 288358400
@@ -152,6 +158,10 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/cache
 	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
+	if [ -n "$(PRPL_VERSION)" ]; then \
+	mkdir -p ${IMAGE_ROOTFS}/lcm; \
+	mkdir -p ${IMAGE_ROOTFS}/cfg; \
+	fi
 	mkdir -p $(IMAGE_PRODUCTS_DIR_AB)
 	$(call Image/GenerateBuildProp)
 	$(call Image/AB/GenerateABRootfs)
@@ -178,6 +188,31 @@ define Image/GenerateUbiImages
 	)
 endef
 
+define Image/GenerateLcmCfgUbiImages
+	$(call Image/Build/generate-ubinize-cfg-lcm)
+	( cd $(KDIR); \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/lcm -o lcm.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o lcm.ubi -m 4096 -p 256KiB -s 4096 ubinize-$(BOARD)-lcm.cfg; \
+	  $(CP) $(KDIR)/lcm.ubifs $(IMAGE_PRODUCTS_DIR)/; \
+	  $(CP) $(KDIR)/lcm.ubi $(IMAGE_PRODUCTS_DIR)/; \
+	  $(CP) $(KDIR)/ubinize-$(BOARD)-lcm.cfg $(IMAGE_PRODUCTS_DIR)/; \
+	  $(CP) $(KDIR)/lcm.ubifs $(IMAGE_PRODUCTS_DIR_AB)/; \
+	  $(CP) $(KDIR)/lcm.ubi $(IMAGE_PRODUCTS_DIR_AB)/; \
+	  $(CP) $(KDIR)/ubinize-$(BOARD)-lcm.cfg $(IMAGE_PRODUCTS_DIR_AB)/; \
+	)
+	$(call Image/Build/generate-ubinize-cfg-cfg)
+	( cd $(KDIR); \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/cfg -o cfg.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
+	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o cfg.ubi -m 4096 -p 256KiB -s 4096 ubinize-$(BOARD)-cfg.cfg; \
+	  $(CP) $(KDIR)/cfg.ubifs $(IMAGE_PRODUCTS_DIR)/; \
+	  $(CP) $(KDIR)/cfg.ubi $(IMAGE_PRODUCTS_DIR)/; \
+	  $(CP) $(KDIR)/ubinize-$(BOARD)-cfg.cfg $(IMAGE_PRODUCTS_DIR)/; \
+	  $(CP) $(KDIR)/cfg.ubifs $(IMAGE_PRODUCTS_DIR_AB)/; \
+	  $(CP) $(KDIR)/cfg.ubi $(IMAGE_PRODUCTS_DIR_AB)/; \
+	  $(CP) $(KDIR)/ubinize-$(BOARD)-cfg.cfg $(IMAGE_PRODUCTS_DIR_AB)/; \
+	)
+endef
+
 ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.ubi), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
 define Ota/Build/ubi
 	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure the recovery profile has been built!")
@@ -187,6 +222,7 @@ endif
 define Image/mkfs/ubifs
 	$(call Image/GenerateUbiImages)
 	$(call Image/GenerateUbiImages,-ab)
+	$(if $(PRPL_VERSION),$(call Image/GenerateLcmCfgUbiImages))
 	$(call Ota/Build/ubi,4k)
 	$(call Ota/Build/ubi_ab,4k)
 endef
@@ -212,6 +248,13 @@ define Image/GenerateExt4Images
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
                 fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /persist -s -b 4096 -l $(PERSIST_SIZE_EXT4) persist.img $(IMAGE_ROOTFS)$(1)/persist \
         )
+        if [ -n "$(PRPL_VERSION)" ]; then \
+        ( cd $(IMAGE_PRODUCTS_DIR)$(1); \
+                fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /lcm -s -b 4096 -l $(LCM_SIZE_EXT4) lcm.img $(IMAGE_ROOTFS)$(1)/lcm; \
+          cd $(IMAGE_PRODUCTS_DIR)$(1); \
+                fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /cfg -s -b 4096 -l $(CFG_SIZE_EXT4) cfg.img $(IMAGE_ROOTFS)$(1)/cfg; \
+        ) \
+	fi
 	if [ $(CONFIG_OTA_RECOVERY_UPDATE) == y ]; then \
 		$(call Ota/Build/compute_sha1); \
 	fi
