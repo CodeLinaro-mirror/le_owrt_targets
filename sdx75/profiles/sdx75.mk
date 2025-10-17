@@ -132,3 +132,24 @@ define Profile/recovery/Description
 endef
 
 $(eval $(call Profile,recovery))
+
+define Profile/iot
+        NAME:=Qualcomm Technologies Inc., Pinnacles Profile
+        PACKAGES:=$(OPENWRT_STANDARD) \
+                $(COREBSP_UTILS) $(UTILS) \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+                $(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
+                $(QTIDATA) $(QTIDATAPROP) $(QTIRILPROP) $(QTICTAINTERNAL) \
+                $(QTIWLAN) $(QTIWLANPROP) $(QTIBT) $(QTIBTPROP) $(QTISSDK) \
+                $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
+                $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) \
+                $(QTICOREINTERNAL) $(QTIPERFPROP) $(QTISENSORSINTERNAL) $(QTISENSORSPROP) $(QTIMSDCPROP) \
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig $(RECOVERYUPDATER)
+endef
+
+define Profile/iot/Description
+        IOT sdx75 package set configuration.
+        Enables complete set of modules for sdx75 target.
+endef
+
+$(eval $(call Profile,iot))
