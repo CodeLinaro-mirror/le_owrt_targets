@@ -11,7 +11,7 @@ BUILD_DIR="$TOPDIR/build_dir/target-aarch64_cortex-a53_musl/"
 
 check_packages_license() {
     local directory="$1"
-    local whitelist=("lftp" "libelf1" "pbr-iptables" "pbr")  # Add the package names you want to whitelist for using GPLV3 license
+    local whitelist=("lftp" "libelf1" "pbr-iptables" "pbr" "gdb" "libmpfr6")  # Add the package names you want to whitelist for using GPLV3 license
     # exception_list: List of packages without licenses. Ensure each package's Makefile includes the PACKAGE_LICENSE variable with the correct license information.
     local exception_list=( "postboot" "rproc-tracing" "kmod-sat_module" "security-tests")
     if [ ! -d "$directory" ]; then
