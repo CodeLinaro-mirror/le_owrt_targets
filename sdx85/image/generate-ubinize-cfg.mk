@@ -77,3 +77,26 @@ define Image/Build/generate-ubinize-cfg-ab
 	)
 endef
 
+define Image/Build/generate-ubinize-cfg-lcm
+	(	echo \[lcm_volume\] > $(UBINIZE_CFG_LCM); \
+		echo mode=ubi >> $(UBINIZE_CFG_LCM); \
+		echo image=\"lcm.ubifs\" >> $(UBINIZE_CFG_LCM); \
+		echo vol_id=0 >> $(UBINIZE_CFG_LCM); \
+		echo vol_type=dynamic >> $(UBINIZE_CFG_LCM); \
+		echo vol_name=lcm >> $(UBINIZE_CFG_LCM); \
+		echo vol_flags=autoresize >> $(UBINIZE_CFG_LCM); \
+		$(CP) ./$(UBINIZE_CFG_LCM) $(KDIR)/; \
+	)
+endef
+
+define Image/Build/generate-ubinize-cfg-cfg
+	(	echo \[cfg_volume\] > $(UBINIZE_CFG_CFG); \
+		echo mode=ubi >> $(UBINIZE_CFG_CFG); \
+		echo image=\"cfg.ubifs\" >> $(UBINIZE_CFG_CFG); \
+		echo vol_id=0 >> $(UBINIZE_CFG_CFG); \
+		echo vol_type=dynamic >> $(UBINIZE_CFG_CFG); \
+		echo vol_name=cfg >> $(UBINIZE_CFG_CFG); \
+		echo vol_flags=autoresize >> $(UBINIZE_CFG_CFG); \
+		$(CP) ./$(UBINIZE_CFG_CFG) $(KDIR)/; \
+	)
+endef
