@@ -4,6 +4,7 @@ ifeq ($(PRPL_VERSION),)
 -include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
 include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
 include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
+-include $(TOPDIR)/owrt-qti-ipq-ezmesh/feeds/qtiipqezmesh.mk
 else
 -include $(TOPDIR)/owrt-qti-ipq-open/qtiipqopen.mk
 endif
@@ -53,7 +54,7 @@ define Profile/cpe
 		$(QTIPERFPROP) \
 		$(QTIIPQ) $(QTIIPQPROP) $(QTIPRPLOPEN) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) $(QTIIPQEZMESH) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
