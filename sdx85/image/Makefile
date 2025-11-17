@@ -45,7 +45,7 @@ EXT4_IMAGE_SIZE =  477626880
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
-KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 pcie_ports=compat pci=pcie_bus_safe"
+KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
 endif
 
 ROOTFS_VOLUME_SIZE_AB = "120MiB"
@@ -63,7 +63,7 @@ endif
 
 
 ifeq ($(TARGET_VARIANT),perf)
-KERNEL_CMDLINE = "ro rootwait console=ttynull androidboot.hardware=qcom msm_rtb.filter=0x237 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 pcie_ports=compat pci=pcie_bus_safe"
+KERNEL_CMDLINE = "ro rootwait console=ttynull androidboot.hardware=qcom msm_rtb.filter=0x237 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
 endif
 
 TARGET_SHA_TYPE = "sha256"
