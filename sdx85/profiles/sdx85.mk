@@ -1,15 +1,19 @@
 include $(TOPDIR)/owrt-qti-conf/sdx.mk
-include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
+ifeq ($(PRPL_VERSION),)
+-include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
+-include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
+include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
+include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
+else
+-include $(TOPDIR)/owrt-qti-ipq-open/qtiipqopen.mk
+endif
 include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
-include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
 
 # include mk files available only in internal builds
 ifneq ($(EXTERNAL_BUILD),1)
 	include $(TOPDIR)/owrt-qti-sensors-internal/qtisensorsinternal.mk
 endif
-include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
-include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
 
 ifeq ($(CONFIG_OTA_RECOVERY_UPDATE),y)
 RECOVERYUPDATER=recovery-updater
@@ -43,15 +47,15 @@ define Profile/cpe
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		$(QTICOREINTERNAL) $(QTINTERNAL) \
+		$(QTICOREINTERNAL) $(QTINTERNAL) $(QTINTERNALDEBUG) \
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		$(QTIPERFPROP) \
-		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTIIPQ) $(QTIIPQPROP) $(QTIPRPLOPEN) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
-		-iw-full
+		-iw iw-full
 endef
 
 define Profile/cpe/Description
@@ -107,13 +111,35 @@ endef
 
 $(eval $(call Profile,cpe-tarang))
 
+define Profile/cpe-v1
+	NAME:=Qualcomm Technologies Inc., Kobuk' CPE-V1 Profile
+	PACKAGES:=$(OPENWRT_STANDARD) \
+		$(COREBSP_UTILS) $(UTILS) \
+		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+		$(QTICOREINTERNAL) $(QTINTERNAL) \
+		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
+		$(QTIPERFPROP) \
+		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
+		-iw-full
+endef
+
+define Profile/cpe-v1/Description
+	CPE-V1 sdx85 package set configuration.
+	Enables complete set of modules for sdx85 target.
+endef
+
+$(eval $(call Profile,cpe-v1))
 
 define Profile/mbb-min
         NAME:=Qualcomm Technologies Inc., Kobuk' MBB Minimal Profile
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-                $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
+                $(QTICOREINTERNAL) $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
                 $(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTISENSORSPROP) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
