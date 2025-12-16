@@ -165,6 +165,7 @@ define Image/Prepare
 	if [ -n "$(PRPL_VERSION)" ]; then \
 	mkdir -p ${IMAGE_ROOTFS}/lcm; \
 	mkdir -p ${IMAGE_ROOTFS}/cfg; \
+	mkdir -p ${IMAGE_ROOTFS}/data_bkp; \
 	fi
 	mkdir -p $(IMAGE_PRODUCTS_DIR_AB)
 	$(call Image/GenerateBuildProp)
