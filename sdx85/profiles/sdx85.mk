@@ -32,7 +32,7 @@ define Profile/mbb
                 $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) $(QTIWLAN) $(QTIWLANPROP) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
                 $(QTIPERFPROP) \
-                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) $(QTIIPQEZMESH) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 ifneq ($(EXTERNAL_BUILD),1)
    PACKAGES += $(QTIRILPROP)
