@@ -34,6 +34,9 @@ define Profile/mbb
                 $(QTIPERFPROP) \
                 $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+ifneq ($(EXTERNAL_BUILD),1)
+   PACKAGES += $(QTIRILPROP)
+endif
 endef
 
 define Profile/mbb/Description
@@ -71,13 +74,11 @@ define Profile/cpe-min
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
 		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
-		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
-		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		$(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
-		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTIIPQ)  \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+		$(QTIEMERGENCYALERTPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
