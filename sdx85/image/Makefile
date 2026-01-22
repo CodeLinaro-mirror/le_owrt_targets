@@ -122,7 +122,9 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/cache
 	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
-	$(SED_BIN_PATH) -i 's/enforcing/disabled/g'  $(RECOVERY_ROOTFS_PATH)/etc/selinux/config
+	if [ $(CONFIG_PACKAGE_selinux-policy) == y ]; then \
+		$(SED_BIN_PATH) -i 's/enforcing/disabled/g'  $(RECOVERY_ROOTFS_PATH)/etc/selinux/config; \
+	fi
 	$(call Image/GenerateBuildProp)
 endef
 

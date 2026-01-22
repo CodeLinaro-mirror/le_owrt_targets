@@ -39,7 +39,11 @@ def adjust_system_size_for_verity (count):
     return(adjusted_size)
 
 def append_verity_metadata_to_system_image2(system_image_raw_path, system_images_dir,staging_dir_hostpkg ,rootfs_dir,kdir):
-    SELINUX_EXT4_OPTS = '-S '+rootfs_dir+'/etc/selinux/selinux-policy/contexts/files/file_contexts'
+    fc_path = rootfs_dir+'/etc/selinux/selinux-policy/contexts/files/file_contexts'
+    if os.path.exists(fc_path):
+        SELINUX_EXT4_OPTS = '-S '+rootfs_dir+'/etc/selinux/selinux-policy/contexts/files/file_contexts'
+    else:
+        SELINUX_EXT4_OPTS = ' '
     verity_hash_file =  system_images_dir +'/verity/verityHash'
     verity_fec_file  = system_images_dir +'/verity/verityFEC'
 
