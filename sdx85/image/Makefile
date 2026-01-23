@@ -12,9 +12,11 @@ KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
 UBI_IMAGE_SIZE = 253952
 UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
-USERDATA_SIZE_EXT4 = 2548039680
+USERDATA_SIZE_EXT4 = 3328999654
+USERDATA_SIZE_EXT4-ab = 2548039680
 ifneq ($(PRPL_VERSION),)
 USERDATA_SIZE_EXT4 = 1578400482
+USERDATA_SIZE_EXT4-ab = 1073741824
 endif
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
 UBINIZE_CFG = ubinize-$(BOARD).cfg
@@ -22,7 +24,7 @@ UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
 RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
 RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
 RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
-RECOVERYFS_SIZE_EXT4 ?= 73400320
+RECOVERYFS_SIZE_EXT4 ?= 94371840
 CACHE_SIZE_EXT4 = 52428800
 OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
 RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
@@ -31,7 +33,7 @@ PERSIST_SIZE_EXT4 = 8192KB
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
 ifneq ($(PRPL_VERSION),)
-LCM_SIZE_EXT4 = 1572864KB
+LCM_SIZE_EXT4 = 1073741824
 CFG_SIZE_EXT4 =16384KB
 UBINIZE_CFG_LCM = ubinize-$(BOARD)-lcm.cfg
 UBINIZE_CFG_CFG = ubinize-$(BOARD)-cfg.cfg
@@ -57,6 +59,9 @@ ifeq ($(PROFILE),mbb-min)
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE)
 else ifeq ($(PROFILE),mbb-512)
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_512)
+else ifeq ($(PROFILE),cpe)
+ROOTFS_VOLUME_SIZE_AB = "150MiB"
+ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
 else
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
 endif
@@ -164,6 +169,7 @@ define Image/Prepare
 	if [ -n "$(PRPL_VERSION)" ]; then \
 	mkdir -p ${IMAGE_ROOTFS}/lcm; \
 	mkdir -p ${IMAGE_ROOTFS}/cfg; \
+	mkdir -p ${IMAGE_ROOTFS}/data_bkp; \
 	fi
 	mkdir -p $(IMAGE_PRODUCTS_DIR_AB)
 	$(call Image/GenerateBuildProp)
@@ -240,10 +246,10 @@ define Image/GenerateExt4Images
 		$(IMAGE_PRODUCTS_DIR)$(1) ; \
 	fi
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4) userdata.img $(IMAGE_ROOTFS)$(1)/data \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4$(1)) userdata.img $(IMAGE_ROOTFS)$(1)/data \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /systemrw -s -b 4096 -l $(SYSTEMRW_IMAGE_ROOTFS_SIZE) systemrw.img $(IMAGE_ROOTFS)$(1)/overlay \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B systemrw.map -a /systemrw -s -b 4096 -l $(SYSTEMRW_IMAGE_ROOTFS_SIZE) systemrw.img $(IMAGE_ROOTFS)$(1)/overlay \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /cache -s -b 4096 -l $(CACHE_SIZE_EXT4) cache.img $(IMAGE_ROOTFS)$(1)/cache \
