@@ -37,6 +37,7 @@ LCM_SIZE_EXT4 = 1073741824
 CFG_SIZE_EXT4 =16384KB
 UBINIZE_CFG_LCM = ubinize-$(BOARD)-lcm.cfg
 UBINIZE_CFG_CFG = ubinize-$(BOARD)-cfg.cfg
+SYSTEMRW_IMAGE_ROOTFS_SIZE = 16384KB
 endif
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
