@@ -167,6 +167,7 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/cache
 	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
+	mkdir -p ${IMAGE_ROOTFS}/data_tmp;
 	if [ -n "$(PRPL_VERSION)" ]; then \
 	mkdir -p ${IMAGE_ROOTFS}/lcm; \
 	mkdir -p ${IMAGE_ROOTFS}/cfg; \
