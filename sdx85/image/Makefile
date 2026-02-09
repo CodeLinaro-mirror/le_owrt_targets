@@ -170,6 +170,7 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/lcm; \
 	mkdir -p ${IMAGE_ROOTFS}/cfg; \
 	mkdir -p ${IMAGE_ROOTFS}/data_bkp; \
+	mkdir -p ${IMAGE_ROOTFS}/ext; \
 	fi
 	mkdir -p $(IMAGE_PRODUCTS_DIR_AB)
 	$(call Image/GenerateBuildProp)
