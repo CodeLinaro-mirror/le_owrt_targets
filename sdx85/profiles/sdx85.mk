@@ -76,7 +76,7 @@ define Profile/cpe-min
 		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
 		$(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
-		$(QTIIPQ)  \
+		$(QTIIPQ) $(QTIIPQPROP) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIEMERGENCYALERTPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
