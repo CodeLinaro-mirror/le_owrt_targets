@@ -4,6 +4,9 @@ ifeq ($(PRPL_VERSION),)
 -include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
 include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
 include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
+-include $(TOPDIR)/owrt-qti-ipq-ezmesh/feeds/qtiipqezmesh.mk
+else
+-include $(TOPDIR)/owrt-qti-ipq-open/qtiipqopen.mk
 endif
 include $(TOPDIR)/owrt-qti-perf-prop/qtiperfprop.mk
 include $(TOPDIR)/owrt-qti-sensors-prop/qtisensorsprop.mk
@@ -29,8 +32,11 @@ define Profile/mbb
                 $(QTIBT) $(QTIBTPROP) $(QTINTERNAL) $(QTIWLAN) $(QTIWLANPROP) \
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
                 $(QTIPERFPROP) \
-                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) $(QTIIPQEZMESH) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+ifneq ($(EXTERNAL_BUILD),1)
+   PACKAGES += $(QTIRILPROP)
+endif
 endef
 
 define Profile/mbb/Description
@@ -49,11 +55,10 @@ define Profile/cpe
 		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		$(QTIPERFPROP) \
-		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTIIPQ) $(QTIIPQPROP) $(QTIPRPLOPEN) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
-		-iw-full
+		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) $(QTIIPQEZMESH) \
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
 define Profile/cpe/Description
@@ -69,13 +74,11 @@ define Profile/cpe-min
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
 		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
-		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
-		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		$(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
-		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTIIPQ)  \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+		$(QTIEMERGENCYALERTPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
