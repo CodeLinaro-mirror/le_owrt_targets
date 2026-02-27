@@ -143,7 +143,7 @@ def generate_boot_images(kdir,kcmdline,kernel_baseaddr, out_images_path):
            vcmdline = c_file.read()
            c_file.close()
      print("Veritycmdline =" + vcmdline)
-     cmdline= kcmdline +' '+vcmdline+' '+'dm-mod.waitfor=PARTLABEL=system dm_verity.require_signatures=1 '
+     cmdline= kcmdline +' '+vcmdline+' '+'dm-mod.waitfor=PARTLABEL=system_a dm_verity.require_signatures=1 '
    #  os.chdir(kdir)
    #  cmd = 'build-tools/mkbootimg/mkbootimg.py --kernel Image 	--cmdline "' +cmdline+'" --pagesize 4096 --base '+kernel_baseaddr + ' --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb ' + 'dtb.img --output '+ out_images_path+'/boot.img'
      cmd = kdir+ '/build-tools/mkbootimg/mkbootimg.py  --kernel '+ kdir + '/Image --cmdline  "' + cmdline+ '" --pagesize 4096 --base ' + str(kernel_baseaddr)+' '+' --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb '+ kdir + '/dtb.img --output '+ out_images_path+'/boot.img'
