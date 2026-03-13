@@ -1,2 +1,6 @@
 usb-composition
 recovery-updater
+recovery-std
+updater-std
+edify-std
+applypatch-std
