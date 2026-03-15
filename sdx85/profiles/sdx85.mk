@@ -192,3 +192,16 @@ define Profile/recovery/Description
 endef
 
 $(eval $(call Profile,recovery))
+
+
+define Profile/initramfs
+        NAME:=Qualcomm Technologies Inc., initramfs Profile
+        PACKAGES:=$(QTIBSPINITRAMFS)
+endef
+
+define Profile/initramfs/Description
+        initramfs sdxecho package set configuration.
+        Enables recovery set of modules for sdxecho target.
+endef
+
+$(eval $(call Profile,initramfs))

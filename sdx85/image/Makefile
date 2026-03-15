@@ -32,6 +32,14 @@ BUILD_PROP = build.prop
 PERSIST_SIZE_EXT4 = 8192KB
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
+RAMDISK_PATH = /dev/null
+RAMDISK_OFFSET = 0x0
+
+ifneq ($(PRPL_VERSION),)
+RAMDISK_PATH = $(TOPDIR)/bin/targets/$(BOARD)/generic/openwrt-$(BOARD)-rootfs.cpio.gz
+RAMDISK_OFFSET = 0x01000000
+endif
+
 ifneq ($(PRPL_VERSION),)
 LCM_SIZE_EXT4 = 1073741824
 CFG_SIZE_EXT4 =16384KB
@@ -76,6 +84,8 @@ TARGET_SHA_TYPE = "sha256"
 
 ifeq ($(PROFILE),recovery)
 IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recovery/root-$(BOARD)
+else ifeq ($(PROFILE),initramfs)
+IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/initramfs/root-$(BOARD)
 else
 IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/root-$(BOARD)
 IMAGE_ROOTFS_AB = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/root-$(BOARD)-ab
@@ -158,6 +168,16 @@ define Image/mkfs/ext4
 	( cd $(IMAGE_PRODUCTS_DIR); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -l $(RECOVERYFS_SIZE_EXT4) recoveryfs.img -a / $(IMAGE_ROOTFS) \
 	)
+endef
+
+else ifeq ($(PROFILE),initramfs)
+define Image/Prepare
+	$(call LicenseCheck)
+	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
+endef
+
+define Image/mkfs/ext4
+	@true
 endef
 
 else
@@ -295,7 +315,7 @@ define Image/GenerateBootImage
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR); \
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR_AB); \
 		$(KDIR)/build-tools/mkbootimg/mkbootimg.py --kernel $(KDIR)/Image \
-		--cmdline $(KERNEL_CMDLINE) --pagesize 4096 --base $(KERNEL_BASEADDR) --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb $(KDIR)/dtb.img --output boot.img; \
+		--cmdline $(KERNEL_CMDLINE) --pagesize 4096 --base $(KERNEL_BASEADDR) --header_version 2 --ramdisk $(RAMDISK_PATH) --ramdisk_offset $(RAMDISK_OFFSET) --dtb $(KDIR)/dtb.img --output boot.img; \
 	)
 	( cd $(KDIR); \
 		$(CP) boot.img boot.img.nonsecure; \
