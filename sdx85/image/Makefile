@@ -19,6 +19,7 @@ USERDATA_SIZE_EXT4 = 1578400482
 USERDATA_SIZE_EXT4-ab = 1073741824
 endif
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 16384KB
+SYSTEMRW_INODE_OPTS :=
 UBINIZE_CFG = ubinize-$(BOARD).cfg
 UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
 RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
@@ -47,6 +48,7 @@ CFG_SIZE_EXT4 =16384KB
 UBINIZE_CFG_LCM = ubinize-$(BOARD)-lcm.cfg
 UBINIZE_CFG_CFG = ubinize-$(BOARD)-cfg.cfg
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 16384KB
+SYSTEMRW_INODE_OPTS = -i 2048
 endif
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
@@ -275,7 +277,7 @@ define Image/GenerateExt4Images
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4$(1)) userdata.img $(IMAGE_ROOTFS)$(1)/data \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B systemrw.map -a /systemrw -s -b 4096 -l $(SYSTEMRW_IMAGE_ROOTFS_SIZE) systemrw.img $(IMAGE_ROOTFS)$(1)/overlay \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B systemrw.map -a /systemrw -s -b 4096 $(SYSTEMRW_INODE_OPTS) -l $(SYSTEMRW_IMAGE_ROOTFS_SIZE) systemrw.img $(IMAGE_ROOTFS)$(1)/overlay \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /cache -s -b 4096 -l $(CACHE_SIZE_EXT4) cache.img $(IMAGE_ROOTFS)$(1)/cache \
