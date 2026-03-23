@@ -38,6 +38,7 @@ RAMDISK_OFFSET = 0x0
 ifneq ($(PRPL_VERSION),)
 RAMDISK_PATH = $(TOPDIR)/bin/targets/$(BOARD)/generic/openwrt-$(BOARD)-rootfs.cpio.gz
 RAMDISK_OFFSET = 0x01000000
+INITRAMFS_TARGET_DIR = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/initramfs/root-$(BOARD)
 endif
 
 ifneq ($(PRPL_VERSION),)
@@ -299,7 +300,11 @@ define Image/GenerateExt4Images
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096  -l $(EXT4_IMAGE_SIZE) system.img.raw $(IMAGE_ROOTFS)$(1) \
 	)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		python getmetadata.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR); \
+        if [ -n "$(PRPL_VERSION)" ]; then \
+			python getmetadata_initramfs.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR) $(INITRAMFS_TARGET_DIR) $(TARGET_SHA_TYPE); \
+		else \
+			python getmetadata.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR); \
+		fi; \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR)$(1)/system.img ]; do sleep 1; done; \
 	fi
 endef
@@ -367,16 +372,32 @@ define Ota/Build/ext4
 endef
 endif
 
+define Regenerate/Initramfs
+( cd $(INITRAMFS_TARGET_DIR); find . | $(STAGING_DIR_HOST)/bin/cpio -o -H newc -R 0:0 | gzip -9n >$(RAMDISK_PATH) )
+endef
+
 define Image/mkfs/ext4
 	$(call Image/GenerateBootImage)
 	$(call Image/GenerateExt4Images)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
+		if [ -n "$(PRPL_VERSION)" ]; then \
+			rm -rf $(RAMDISK_PATH); \
+			$(call Regenerate/Initramfs); \
+			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
+		else \
+			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
+		fi; \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR)/boot.img ]; do sleep 1; done; \
 	fi
 	$(call Image/GenerateExt4Images,-ab)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB);\
+		if [ -n "$(PRPL_VERSION)" ]; then \
+			rm -rf $(RAMDISK_PATH); \
+			$(call Regenerate/Initramfs); \
+			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
+		else \
+			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
+		fi; \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR_AB)/boot.img ]; do sleep 1; done; \
 	fi
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
