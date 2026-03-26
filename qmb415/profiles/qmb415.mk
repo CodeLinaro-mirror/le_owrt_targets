@@ -28,6 +28,7 @@ define Profile/mbb
                 $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
                 $(QTIPERFPROP) \
                 $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+                $(QTIDSP) $(QTIDSPPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
