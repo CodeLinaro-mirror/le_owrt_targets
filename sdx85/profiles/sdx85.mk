@@ -5,6 +5,7 @@ ifeq ($(PRPL_VERSION),)
 include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
 include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
 -include $(TOPDIR)/owrt-qti-ipq-ezmesh/feeds/qtiipqezmesh.mk
+-include $(TOPDIR)/owrt-qti-wlan/qtiwlan.mk
 else
 -include $(TOPDIR)/owrt-qti-ipq-open/qtiipqopen.mk
 endif
@@ -145,7 +146,7 @@ define Profile/mbb-min
                 $(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTISENSORSPROP) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) $(QTIWLANMIN) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp
 endef
 
