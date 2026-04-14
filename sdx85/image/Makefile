@@ -299,6 +299,14 @@ define Image/GenerateExt4Images
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096  -l $(EXT4_IMAGE_SIZE) system.img.raw $(IMAGE_ROOTFS)$(1) \
 	)
+
+        if [ -n "$(PRPL_VERSION)" ]; then \
+	( $(CP) $(CURDIR)/rootfs_unsparse.its $(IMAGE_PRODUCTS_DIR)$(1)/; \
+	  cd $(IMAGE_PRODUCTS_DIR)$(1); \
+	  $(STAGING_DIR_HOST)/bin/mkimage -f $(IMAGE_PRODUCTS_DIR)$(1)/rootfs_unsparse.its -E -p 0x1000 rootfs.itb; \
+	) \
+        fi
+
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
         if [ -n "$(PRPL_VERSION)" ]; then \
 			python getmetadata_initramfs.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR) $(INITRAMFS_TARGET_DIR) $(TARGET_SHA_TYPE); \
