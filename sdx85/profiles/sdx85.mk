@@ -4,6 +4,8 @@ ifeq ($(PRPL_VERSION),)
 -include $(TOPDIR)/owrt-qti-emergencyalert-prop/qtiemergencyalertprop.mk
 include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
 include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
+-include $(TOPDIR)/owrt-qti-ipq-ezmesh/feeds/qtiipqezmesh.mk
+-include $(TOPDIR)/owrt-qti-wlan/qtiwlan.mk
 else
 -include $(TOPDIR)/owrt-qti-ipq-open/qtiipqopen.mk
 endif
@@ -33,6 +35,9 @@ define Profile/mbb
                 $(QTIPERFPROP) \
                 $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
+ifneq ($(EXTERNAL_BUILD),1)
+   PACKAGES += $(QTIRILPROP)
+endif
 endef
 
 define Profile/mbb/Description
@@ -53,9 +58,8 @@ define Profile/cpe
 		$(QTIPERFPROP) \
 		$(QTIIPQ) $(QTIIPQPROP) $(QTIPRPLOPEN) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
-		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
-		-iw iw-full
+		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) $(QTIIPQEZMESH) \
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
 define Profile/cpe/Description
@@ -71,13 +75,12 @@ define Profile/cpe-min
 		$(COREBSP_UTILS) $(UTILS) \
 		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
 		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
-		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		$(QTIPERFPROP) \
 		$(QTITELSDK) $(QTITELSDKPROP) \
-		$(QTIIPQ) $(QTIIPQPROP) \
+		$(QTIIPQ)  \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+		$(QTIEMERGENCYALERTPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
@@ -143,7 +146,7 @@ define Profile/mbb-min
                 $(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
                 $(QTISENSORSPROP) $(QTINTERNAL) \
                 $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) \
+                $(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) $(QTIWLANMIN) \
                 -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp
 endef
 
@@ -190,3 +193,16 @@ define Profile/recovery/Description
 endef
 
 $(eval $(call Profile,recovery))
+
+
+define Profile/initramfs
+        NAME:=Qualcomm Technologies Inc., initramfs Profile
+        PACKAGES:=$(QTIBSPINITRAMFS)
+endef
+
+define Profile/initramfs/Description
+        initramfs sdxecho package set configuration.
+        Enables recovery set of modules for sdxecho target.
+endef
+
+$(eval $(call Profile,initramfs))

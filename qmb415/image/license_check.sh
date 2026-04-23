@@ -1,4 +1,4 @@
-#Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+#Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 #SPDX-License-Identifier: BSD-3-Clause-Clear
 
 #!/bin/bash
@@ -7,7 +7,7 @@ echo $1 $2 $3
 PROFILE=$1
 BOARD=$2
 TOPDIR=$3
-BUILD_DIR="$TOPDIR/build_dir/target-aarch64_cortex-a53_musl/"
+BUILD_DIR="$TOPDIR/build_dir/target-aarch64_kryo300_musl/"
 
 check_packages_license() {
     local directory="$1"
@@ -78,10 +78,6 @@ check_packages_license() {
 if [[ $PROFILE == "recovery" ]]; then
     echo -e "\nRecovery Profile."
     directory="$BUILD_DIR/recovery/root-$BOARD/usr/lib/opkg/info"
-    check_packages_license "$directory"
-elif [[ $PROFILE == "initramfs" ]]; then
-    echo -e "\ninitramfs Profile."
-    directory="$BUILD_DIR/initramfs/root-$BOARD/usr/lib/opkg/info"
     check_packages_license "$directory"
 else
     echo -e "\n${PROFILE^} Profile."

@@ -1,30 +1,15 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
-include generate-ubinize-cfg.mk
 include generate-ab-rootfs.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-ext4.mk
-include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
 include $(TOPDIR)/owrt-qti-bsp/include/abota-ext4.mk
-include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
 include generate-build-prop.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
-UBI_IMAGE_SIZE = 253952
-UBIFS_OPTS = -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F
-USERDATA_SIZE_EXT4 = 3328999654
-USERDATA_SIZE_EXT4-ab = 2548039680
-ifneq ($(PRPL_VERSION),)
-USERDATA_SIZE_EXT4 = 1578400482
-USERDATA_SIZE_EXT4-ab = 1073741824
-endif
-SYSTEMRW_IMAGE_ROOTFS_SIZE = 16384KB
-UBINIZE_CFG = ubinize-$(BOARD).cfg
-UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
-RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
-RECOVERY_UBIFS_IMAGE = recoveryfs.ubifs
-RECOVERY_MKUBIFS_ARGS = -m 4096 -e 253952 -c 200 -F
-RECOVERYFS_SIZE_EXT4 ?= 94371840
+USERDATA_SIZE_EXT4 = 2548039680
+SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
+RECOVERYFS_SIZE_EXT4 ?= 73400320
 CACHE_SIZE_EXT4 = 52428800
 OTA_SCRIPTS_PATH = ${BUILD_DIR}/OTA/ota-scripts
 RELEASE_TOOLS_PATH = $(TOPDIR)/src/OTA/build/tools/releasetools
@@ -32,22 +17,6 @@ BUILD_PROP = build.prop
 PERSIST_SIZE_EXT4 = 8192KB
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
-RAMDISK_PATH = /dev/null
-RAMDISK_OFFSET = 0x0
-
-ifneq ($(PRPL_VERSION),)
-RAMDISK_PATH = $(TOPDIR)/bin/targets/$(BOARD)/generic/openwrt-$(BOARD)-rootfs.cpio.gz
-RAMDISK_OFFSET = 0x01000000
-INITRAMFS_TARGET_DIR = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/initramfs/root-$(BOARD)
-endif
-
-ifneq ($(PRPL_VERSION),)
-LCM_SIZE_EXT4 = 1073741824
-CFG_SIZE_EXT4 =16384KB
-UBINIZE_CFG_LCM = ubinize-$(BOARD)-lcm.cfg
-UBINIZE_CFG_CFG = ubinize-$(BOARD)-cfg.cfg
-SYSTEMRW_IMAGE_ROOTFS_SIZE = 16384KB
-endif
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
 EXT4_IMAGE_SIZE = 288358400
@@ -69,9 +38,6 @@ ifeq ($(PROFILE),mbb-min)
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE)
 else ifeq ($(PROFILE),mbb-512)
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_512)
-else ifeq ($(PROFILE),cpe)
-ROOTFS_VOLUME_SIZE_AB = "150MiB"
-ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
 else
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
 endif
@@ -85,8 +51,6 @@ TARGET_SHA_TYPE = "sha256"
 
 ifeq ($(PROFILE),recovery)
 IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recovery/root-$(BOARD)
-else ifeq ($(PROFILE),initramfs)
-IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/initramfs/root-$(BOARD)
 else
 IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/root-$(BOARD)
 IMAGE_ROOTFS_AB = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/root-$(BOARD)-ab
@@ -104,10 +68,8 @@ RECOVERY_IMGS_PATH = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/recovery
 RECOVERY_ROOTFS_PATH = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recovery/root-$(BOARD)
 
 ifeq ($(CONFIG_PACKAGE_selinux-policy),y)
-SELINUX_UBI_OPTS := --selinux=$(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 SELINUX_EXT4_OPTS := -S $(IMAGE_ROOTFS)/etc/selinux/selinux-policy/contexts/files/file_contexts
 else
-SELINUX_UBI_OPTS :=
 SELINUX_EXT4_OPTS :=
 endif
 
@@ -134,31 +96,8 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/cache
 	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
-	if [ $(CONFIG_PACKAGE_selinux-policy) == y ]; then \
-		$(SED_BIN_PATH) -i 's/enforcing/disabled/g'  $(RECOVERY_ROOTFS_PATH)/etc/selinux/config; \
-	fi
+	$(SED_BIN_PATH) -i 's/enforcing/disabled/g'  $(RECOVERY_ROOTFS_PATH)/etc/selinux/config
 	$(call Image/GenerateBuildProp)
-endef
-
-define Image/mkfs/ubifs
-	( cd $(TOPDIR); \
-		$(SED_BIN_PATH) -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}/etc/passwd; \
-		rm -rf ${IMAGE_ROOTFS}/etc/uci-defaults/13_fix-group-user; \
-	)
-	( 	echo \[recoveryfs_volume\] > $(RECOVERY_UBINIZE_CFG); \
-		echo mode=ubi >> $(RECOVERY_UBINIZE_CFG); \
-		echo image=\"$(RECOVERY_UBIFS_IMAGE)\" >> $(RECOVERY_UBINIZE_CFG); \
-		echo vol_id=0 >> $(RECOVERY_UBINIZE_CFG); \
-		echo vol_type=dynamic >> $(RECOVERY_UBINIZE_CFG); \
-		echo vol_name=rootfs >> $(RECOVERY_UBINIZE_CFG); \
-		echo vol_size=\"35MiB\" >> $(RECOVERY_UBINIZE_CFG); \
-		$(CP) ./$(RECOVERY_UBINIZE_CFG) $(KDIR) \
-	)
-	( cd $(KDIR); \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS)  -o $(RECOVERY_UBIFS_IMAGE) $(RECOVERY_MKUBIFS_ARGS); \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o recoveryfs.ubi -m 4096 -p 256KiB -s 4096 $(RECOVERY_UBINIZE_CFG); \
-	$(CP) $(KDIR)/recoveryfs.ubi $(IMAGE_PRODUCTS_DIR)/; \
-	)
 endef
 
 define Image/mkfs/ext4
@@ -171,16 +110,6 @@ define Image/mkfs/ext4
 	)
 endef
 
-else ifeq ($(PROFILE),initramfs)
-define Image/Prepare
-	$(call LicenseCheck)
-	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
-endef
-
-define Image/mkfs/ext4
-	@true
-endef
-
 else
 
 define Image/Prepare
@@ -190,76 +119,9 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/cache
 	mkdir -p ${IMAGE_ROOTFS}/cache/recovery
 	mkdir -p ${IMAGE_ROOTFS}/persist
-	mkdir -p ${IMAGE_ROOTFS}/data_tmp;
-	if [ -n "$(PRPL_VERSION)" ]; then \
-	mkdir -p ${IMAGE_ROOTFS}/lcm; \
-	mkdir -p ${IMAGE_ROOTFS}/cfg; \
-	mkdir -p ${IMAGE_ROOTFS}/data_bkp; \
-	mkdir -p ${IMAGE_ROOTFS}/ext; \
-	fi
 	mkdir -p $(IMAGE_PRODUCTS_DIR_AB)
 	$(call Image/GenerateBuildProp)
 	$(call Image/AB/GenerateABRootfs)
-endef
-
-define Image/GenerateUbiImages
-	( cd $(TOPDIR); \
-		$(SED_BIN_PATH) -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}$(1)/etc/passwd; \
-		rm -rf ${IMAGE_ROOTFS}$(1)/etc/uci-defaults/13_fix-group-user; \
-	)
-	cd $(KDIR); \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs $(SELINUX_UBI_OPTS) -r $(IMAGE_ROOTFS)$(1) -o sysfs.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)$(1)/data -o userfs.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
-	$(call Image/Build/generate-ubinize-cfg$(1))
-	( cd $(KDIR); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize \
-		-o sysfs.ubi -m 4096 -p 256KiB -s 4096 \
-		ubinize-$(BOARD)$(1).cfg \
-	)
-	( $(CP) $(KDIR)/sysfs.ubifs $(IMAGE_PRODUCTS_DIR)$(1)/; \
-	  $(CP) $(KDIR)/sysfs.ubi $(IMAGE_PRODUCTS_DIR)$(1)/; \
-	  $(CP) $(KDIR)/userfs.ubifs $(IMAGE_PRODUCTS_DIR)$(1)/; \
-	  $(CP) $(KDIR)/ubinize-$(BOARD)$(1).cfg $(IMAGE_PRODUCTS_DIR)$(1)/; \
-	)
-endef
-
-define Image/GenerateLcmCfgUbiImages
-	$(call Image/Build/generate-ubinize-cfg-lcm)
-	( cd $(KDIR); \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/lcm -o lcm.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o lcm.ubi -m 4096 -p 256KiB -s 4096 ubinize-$(BOARD)-lcm.cfg; \
-	  $(CP) $(KDIR)/lcm.ubifs $(IMAGE_PRODUCTS_DIR)/; \
-	  $(CP) $(KDIR)/lcm.ubi $(IMAGE_PRODUCTS_DIR)/; \
-	  $(CP) $(KDIR)/ubinize-$(BOARD)-lcm.cfg $(IMAGE_PRODUCTS_DIR)/; \
-	  $(CP) $(KDIR)/lcm.ubifs $(IMAGE_PRODUCTS_DIR_AB)/; \
-	  $(CP) $(KDIR)/lcm.ubi $(IMAGE_PRODUCTS_DIR_AB)/; \
-	  $(CP) $(KDIR)/ubinize-$(BOARD)-lcm.cfg $(IMAGE_PRODUCTS_DIR_AB)/; \
-	)
-	$(call Image/Build/generate-ubinize-cfg-cfg)
-	( cd $(KDIR); \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/mkfs.ubifs -r $(IMAGE_ROOTFS)/cfg -o cfg.ubifs -m 4096 -e $(UBI_IMAGE_SIZE) -c 2146 -F; \
-	fakeroot $(STAGING_DIR_HOSTPKG)/bin/ubinize -o cfg.ubi -m 4096 -p 256KiB -s 4096 ubinize-$(BOARD)-cfg.cfg; \
-	  $(CP) $(KDIR)/cfg.ubifs $(IMAGE_PRODUCTS_DIR)/; \
-	  $(CP) $(KDIR)/cfg.ubi $(IMAGE_PRODUCTS_DIR)/; \
-	  $(CP) $(KDIR)/ubinize-$(BOARD)-cfg.cfg $(IMAGE_PRODUCTS_DIR)/; \
-	  $(CP) $(KDIR)/cfg.ubifs $(IMAGE_PRODUCTS_DIR_AB)/; \
-	  $(CP) $(KDIR)/cfg.ubi $(IMAGE_PRODUCTS_DIR_AB)/; \
-	  $(CP) $(KDIR)/ubinize-$(BOARD)-cfg.cfg $(IMAGE_PRODUCTS_DIR_AB)/; \
-	)
-endef
-
-ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.ubi), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
-define Ota/Build/ubi
-	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure the recovery profile has been built!")
-endef
-endif
-
-define Image/mkfs/ubifs
-	$(call Image/GenerateUbiImages)
-	$(call Image/GenerateUbiImages,-ab)
-	$(if $(PRPL_VERSION),$(call Image/GenerateLcmCfgUbiImages))
-	$(call Ota/Build/ubi,4k)
-	$(call Ota/Build/ubi_ab,4k)
 endef
 
 define Image/GenerateExt4Images
@@ -272,10 +134,10 @@ define Image/GenerateExt4Images
 		$(IMAGE_PRODUCTS_DIR)$(1) ; \
 	fi
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4$(1)) userdata.img $(IMAGE_ROOTFS)$(1)/data \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4) userdata.img $(IMAGE_ROOTFS)$(1)/data \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B systemrw.map -a /systemrw -s -b 4096 -l $(SYSTEMRW_IMAGE_ROOTFS_SIZE) systemrw.img $(IMAGE_ROOTFS)$(1)/overlay \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /systemrw -s -b 4096 -l $(SYSTEMRW_IMAGE_ROOTFS_SIZE) systemrw.img $(IMAGE_ROOTFS)$(1)/overlay \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /cache -s -b 4096 -l $(CACHE_SIZE_EXT4) cache.img $(IMAGE_ROOTFS)$(1)/cache \
@@ -283,13 +145,6 @@ define Image/GenerateExt4Images
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
                 fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /persist -s -b 4096 -l $(PERSIST_SIZE_EXT4) persist.img $(IMAGE_ROOTFS)$(1)/persist \
         )
-        if [ -n "$(PRPL_VERSION)" ]; then \
-        ( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-                fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /lcm -s -b 4096 -l $(LCM_SIZE_EXT4) lcm.img $(IMAGE_ROOTFS)$(1)/lcm; \
-          cd $(IMAGE_PRODUCTS_DIR)$(1); \
-                fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /cfg -s -b 4096 -l $(CFG_SIZE_EXT4) cfg.img $(IMAGE_ROOTFS)$(1)/cfg; \
-        ) \
-	fi
 	if [ $(CONFIG_OTA_RECOVERY_UPDATE) == y ]; then \
 		$(call Ota/Build/compute_sha1); \
 	fi
@@ -300,11 +155,7 @@ define Image/GenerateExt4Images
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096  -l $(EXT4_IMAGE_SIZE) system.img.raw $(IMAGE_ROOTFS)$(1) \
 	)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-        if [ -n "$(PRPL_VERSION)" ]; then \
-			python getmetadata_initramfs.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR) $(INITRAMFS_TARGET_DIR) $(TARGET_SHA_TYPE); \
-		else \
-			python getmetadata.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR); \
-		fi; \
+		python getmetadata.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR); \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR)$(1)/system.img ]; do sleep 1; done; \
 	fi
 endef
@@ -320,7 +171,7 @@ define Image/GenerateBootImage
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR); \
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR_AB); \
 		$(KDIR)/build-tools/mkbootimg/mkbootimg.py --kernel $(KDIR)/Image \
-		--cmdline $(KERNEL_CMDLINE) --pagesize 4096 --base $(KERNEL_BASEADDR) --header_version 2 --ramdisk $(RAMDISK_PATH) --ramdisk_offset $(RAMDISK_OFFSET) --dtb $(KDIR)/dtb.img --output boot.img; \
+		--cmdline $(KERNEL_CMDLINE) --pagesize 4096 --base $(KERNEL_BASEADDR) --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb $(KDIR)/dtb.img --output boot.img; \
 	)
 	( cd $(KDIR); \
 		$(CP) boot.img boot.img.nonsecure; \
@@ -372,32 +223,16 @@ define Ota/Build/ext4
 endef
 endif
 
-define Regenerate/Initramfs
-( cd $(INITRAMFS_TARGET_DIR); find . | $(STAGING_DIR_HOST)/bin/cpio -o -H newc -R 0:0 | gzip -9n >$(RAMDISK_PATH) )
-endef
-
 define Image/mkfs/ext4
 	$(call Image/GenerateBootImage)
 	$(call Image/GenerateExt4Images)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		if [ -n "$(PRPL_VERSION)" ]; then \
-			rm -rf $(RAMDISK_PATH); \
-			$(call Regenerate/Initramfs); \
-			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
-		else \
-			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
-		fi; \
+		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR)/boot.img ]; do sleep 1; done; \
 	fi
 	$(call Image/GenerateExt4Images,-ab)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		if [ -n "$(PRPL_VERSION)" ]; then \
-			rm -rf $(RAMDISK_PATH); \
-			$(call Regenerate/Initramfs); \
-			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
-		else \
-			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
-		fi; \
+		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB);\
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR_AB)/boot.img ]; do sleep 1; done; \
 	fi
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \

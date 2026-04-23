@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries. 
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 """
@@ -13,9 +13,9 @@ Note: currently the file is not touching the main images it only copies
       the image to /verity  and update the image over there .
       Going fwd thi will not be case and should be having only one set of image
       with noverity bootloader
-      Kown issue , as this offline process done on verity folder if any thing goes
+      Known issue , as this offline process done on verity folder if any thing goes
       wrong during this script it is not going to block / stop main compilation
-      this is except as per desing and we still have non-verity images
+      this is except as per design and we still have non-verity images
 """
 import os
 import sys
@@ -23,12 +23,13 @@ import subprocess
 import os
 import shutil
 import math
+import shlex
 
 FIXED_SALT="aee087a5be3b982978c923f566a94613496b417f2af592639bc80d141e34dfe7"
 SECTOR_SIZE=512
 BLOCK_SIZE=4096
 FEC_ROOTS=2
-VERITY_ALGO = "sha256"
+VERITY_ALGO="sha256"
 
 def adjust_system_size_for_verity (count):
 #    print(str(count) +' ,'+ str(SYSTEM_IMAGE_ROOTFS_SIZE) )
@@ -38,14 +39,16 @@ def adjust_system_size_for_verity (count):
 #   print( 'adj_size :' + str(adjusted_size)+'..' + str(count))
     return(adjusted_size)
 
-def append_verity_metadata_to_system_image2(system_image_raw_path, system_images_dir,staging_dir_hostpkg ,rootfs_dir,kdir):
+def append_verity_metadata_to_system_image2(system_image_raw_path, system_images_dir,staging_dir_hostpkg ,rootfs_dir,kdir, initramfs_dir, sha_type):
     fc_path = rootfs_dir+'/etc/selinux/selinux-policy/contexts/files/file_contexts'
     if os.path.exists(fc_path):
         SELINUX_EXT4_OPTS = '-S '+rootfs_dir+'/etc/selinux/selinux-policy/contexts/files/file_contexts'
     else:
         SELINUX_EXT4_OPTS = ' '
+    VERITY_ALGO = sha_type
     verity_hash_file =  system_images_dir +'/verity/verityHash'
     verity_fec_file  = system_images_dir +'/verity/verityFEC'
+    verity_roothash_file  = system_images_dir +'/verity/roothash.bin'
 
     for count  in range(94, 0, -1):
         #  new image new metadata append and check
@@ -53,8 +56,11 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
             os.remove(system_images_dir +'/verity/verity_meta_data.txt')
             os.remove(system_images_dir +'/verity/verityHash')
             os.remove(system_images_dir +'/verity/verityFEC')
-        cmd = 'veritysetup format '+ system_images_dir+'/verity/system.img.raw' +' '+ verity_hash_file +' --fec-device ' +verity_fec_file+'  --fec-roots ' + str(FEC_ROOTS)+' --salt ' +FIXED_SALT
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+            os.remove(system_images_dir +'/verity/roothash.bin')
+        # Root hash bin format for initramfs approach
+        cmd = 'veritysetup format '+ system_images_dir+'/verity/system.img.raw' +' '+ verity_hash_file +' --fec-device ' +verity_fec_file+'  --fec-roots ' + str(FEC_ROOTS)+' --salt ' +FIXED_SALT + ' --hash ' + str(VERITY_ALGO + ' --root-hash-file ' + verity_roothash_file )
+        print('cmd ->' +  str(cmd))
+        proc = subprocess.Popen(shlex.split(cmd), shell=False, stdout=subprocess.PIPE)
         VERITY_META = proc.communicate()[0]
         with open(system_images_dir +'/verity/verity_meta_data.txt', 'w') as f_metadata:
             entries = VERITY_META.decode('utf-8').split("\n")[1:-1]
@@ -64,7 +70,7 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
                 locals()[key] = value.strip()
 #               print(key +'-> ' + value)
                 if  key == 'Roothash':
-                    Roothash = value.strip()
+                    continue
                 if  key == 'Datablocks':
                     Datablocks = value.strip()
                 f_metadata.write(key+'   '+ value+ '\n')
@@ -85,16 +91,11 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
         systemSize = os.stat(system_image_raw_path).st_size
         print('--> done with new verity image --rechecking %d' %(systemSize))
         if int(systemSize) > int(SYSTEM_IMAGE_ROOTFS_SIZE) :
-#           print('Size mismatch '+ str(systemSize) +' Vs '+ str(SYSTEM_IMAGE_ROOTFS_SIZE)+'...recreating unsparse image.')
-            #os.remove(system_images_dir + '/verity/system.img.raw')
 # creating new image with new size
             adjustedSystemSize= adjust_system_size_for_verity (count)
 #           print( '-->'+str(count) +'.....' + str(adjustedSystemSize))
             cmd = 'fakeroot '+staging_dir_hostpkg+'/bin/make_ext4fs '+ SELINUX_EXT4_OPTS + ' -B ' +system_images_dir+'/system.map -a / -b 4096  -l '+ str(adjustedSystemSize)+' '+ system_image_raw_path +' ' + rootfs_dir
-#           result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-            result = subprocess.run(cmd, shell=True)
-#           print('result -->'+ str(result.returncode) +result.stdout.decode('utf-8'))
-#           we see some time return code as  returncode=1, stdout=b'', stderr=b'failed to open block_list_file: Permission denied
+            result = subprocess.run(shlex.split(cmd), shell=False)
             systemSize = os.stat(system_image_raw_path).st_size
             if systemSize != 0:
                 print(' resizing of system image ..' )
@@ -108,30 +109,21 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
     hash_offset = adjustedSystemSize
     hash_size=os.path.getsize(system_images_dir +'/verity/verityHash')
     fec_offset = (int(hash_offset) + int(hash_size)) // 4096
-## Creating the verity cmdline that is requried .
     ROOT_SECTORS = int(Datablocks) * 8
 
 # Convert to sparse image
     img2simg = staging_dir_hostpkg + '/bin/img2simg'
     cmd =  img2simg + " %s %s " % (system_images_dir+'/verity/system.img.raw', system_images_dir + '/system.img')
-    ret = subprocess.call(cmd, shell=True)
+    ret = subprocess.call(shlex.split(cmd), shell=False)
     if ret != 0:
             print("-->!!!Repacking of system image to  Sparse Failed cmd:%s" % cmd)
-#Sign the hash withe know key ,
-    with open(system_images_dir+'/verity/roothash.txt', 'w' ) as  hash_text:
-        hash_text.write(Roothash)
-        hash_text.close()
-#copy the certs which keep updating with kernel build
-    cmd =  'openssl smime -sign -nocerts -noattr -binary  -in '+system_images_dir+'/verity/roothash.txt -inkey '+ system_images_dir+'/verity_key.pem  -signer '+system_images_dir+'/verity_cert.pem  -outform der -out '+ system_images_dir+'/verity/verity_sig.txt'
-    ret = subprocess.call(cmd, shell=True)
 
-    cmd = 'od -tx1 -An '+ system_images_dir +'/verity/verity_sig.txt |tr -d ' +"\' \n\'"
-    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-    root_hash_sig_key_value = stdout.decode().strip()
+    #verity signature in bin format for the initramfs approach
+    cmd =  'openssl smime -sign -nocerts -noattr -binary  -in '+system_images_dir+'/verity/roothash.bin -inkey '+ system_images_dir+'/verity_key.pem  -signer '+system_images_dir+'/verity_cert.pem  -outform der -out '+ system_images_dir+'/verity/verity_sig.bin'
+    ret = subprocess.call(shlex.split(cmd), shell=False)
 
     with open(system_images_dir +'/verity/cmdline', 'w') as cmdline_file:
-        vcmdline = 'verity=\\"'+ str(ROOT_SECTORS)+' '+ str(Datablocks.strip())+' '+  str((Roothash).strip()) + ' '+ str(fec_offset) +' '+str(root_hash_sig_key_value) +' 1\\"'
+        vcmdline = 'verity=\\"'+ str(ROOT_SECTORS)+' '+ str(Datablocks.strip())+ ' '+ str(fec_offset)  +' 1\\"'
         cmdline_file.write(vcmdline)
         cmdline_file.close()
 
@@ -141,24 +133,27 @@ def append_verity_metadata_to_system_image2(system_image_raw_path, system_images
             u_metadata.write('fec_offset      '+ str(fec_offset))
             u_metadata.write('\nhash_offset      '+ str( hash_offset))
             u_metadata.close()
+        #copy the metadata, Root hash and signature bins into initramfs
+        system_image_verity_metadata_path = initramfs_dir+'/etc/verity_meta_data.txt'
+        dest = shutil.copyfile(system_images_dir+'/verity/verity_meta_data.txt', system_image_verity_metadata_path)
+        system_image_verity_sig_path = initramfs_dir+'/etc/verity_sig.bin'
+        dest = shutil.copyfile(system_images_dir+'/verity/verity_sig.bin', system_image_verity_sig_path)
+        system_image_roothash_path = initramfs_dir+'/etc/roothash.bin'
+        dest = shutil.copyfile(system_images_dir+'/verity/roothash.bin', system_image_roothash_path)
 
 
-def generate_boot_images(kdir,kcmdline,kernel_baseaddr, out_images_path):
-     with open(out_images_path+'/verity/cmdline', 'r') as c_file:
-           vcmdline = c_file.read()
-           c_file.close()
-     print("Veritycmdline =" + vcmdline)
-     cmdline= kcmdline +' '+vcmdline+' '+'dm_verity.require_signatures=1 '
-   #  os.chdir(kdir)
-   #  cmd = 'build-tools/mkbootimg/mkbootimg.py --kernel Image 	--cmdline "' +cmdline+'" --pagesize 4096 --base '+kernel_baseaddr + ' --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb ' + 'dtb.img --output '+ out_images_path+'/boot.img'
-     cmd = kdir+ '/build-tools/mkbootimg/mkbootimg.py  --kernel '+ kdir + '/Image --cmdline  "' + cmdline+ '" --pagesize 4096 --base ' + str(kernel_baseaddr)+' '+' --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb '+ kdir + '/dtb.img --output '+ out_images_path+'/boot.img'
-     ret = subprocess.call(cmd, shell=True)
+def generate_boot_images(kdir,kcmdline,kernel_baseaddr,out_images_path,ramdisk_path,ramdisk_offset):
+     cmdline= kcmdline +' verity=enabled '
+
+     # Regenrating Boot image by adding verity cmdline.
+     cmd = kdir+ '/build-tools/mkbootimg/mkbootimg.py  --kernel '+ kdir + '/Image --cmdline  "' + cmdline+ '" --pagesize 4096 --base ' + str(kernel_baseaddr)+' '+' --header_version 2 --ramdisk '+ ramdisk_path + ' --ramdisk_offset '+ ramdisk_offset +' --dtb '+ kdir + '/dtb.img --output '+ out_images_path+'/boot.img'
+     ret = subprocess.call(shlex.split(cmd), shell=False)
      if ret != 0:
           print("-->!!!!Generation of verity boot image failed .%s" % cmd)
 
-   #  cmd = 'build-tools/mkbootimg/mkbootimg.py --kernel Image 	--cmdline "' +kcmdline+'" --pagesize 4096 --base '+kernel_baseaddr + ' --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb ' + 'dtb.img --output '+ out_images_path+'/boot.noverity.img'
-     cmd = kdir+ '/build-tools/mkbootimg/mkbootimg.py  --kernel '+ kdir + '/Image --cmdline  "' + kcmdline+ '" --pagesize 4096 --base ' + str(kernel_baseaddr)+' '+' --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb '+ kdir + '/dtb.img --output '+ out_images_path+'/boot.noverity.img'
-     ret = subprocess.call(cmd, shell=True)
+     # Boot image is regenerated without verity.
+     cmd = kdir+ '/build-tools/mkbootimg/mkbootimg.py  --kernel '+ kdir + '/Image --cmdline  "' + kcmdline+ '" --pagesize 4096 --base ' + str(kernel_baseaddr)+' '+' --header_version 2 --ramdisk '+ ramdisk_path + ' --ramdisk_offset '+ ramdisk_offset +' --dtb '+ kdir + '/dtb.img --output '+ out_images_path+'/boot.noverity.img'
+     ret = subprocess.call(shlex.split(cmd), shell=False)
      if ret != 0:
           print("-->!!!!Generation of noverity boot image failed .%s" % cmd)
 
@@ -170,7 +165,7 @@ if __name__ == "__main__":
     if num_arg < 3:
         print('-->wrong usage of utility ')
         sys.exit()
-    elif num_arg == 5:
+    elif num_arg == 7:
          print ('-->Generating verity boot images')
          for i in range(1, num_arg):
             print(sys.argv[i], end = "\n")
@@ -178,8 +173,10 @@ if __name__ == "__main__":
             kernel_cmdline = str(sys.argv[2])
             kernel_baseaddr = str(sys.argv[3])
             out_images_path = str(sys.argv[4])
-            generate_boot_images(kernel_dir, kernel_cmdline,kernel_baseaddr, out_images_path)
-    elif num_arg == 6:
+            ramdisk_path = str(sys.argv[5])
+            ramdisk_offset = str(sys.argv[6])
+            generate_boot_images(kernel_dir, kernel_cmdline,kernel_baseaddr, out_images_path, ramdisk_path, ramdisk_offset)
+    elif num_arg == 8:
         print('--> Generating verity System image(eMMC Device)!')
         for i in range(1, num_arg):
             print(sys.argv[i], end = " \n")
@@ -188,6 +185,8 @@ if __name__ == "__main__":
         system_images_dir = sys.argv[3]
         rootfs_dir = sys.argv[4]
         kdir = sys.argv[5]
+        initramfs_dir = sys.argv[6]
+        sha_type = sys.argv[7]
         if os.path.exists(system_images_dir+ '/verity'):
                shutil.rmtree(system_images_dir + '/verity')
         try:
@@ -197,5 +196,5 @@ if __name__ == "__main__":
         system_image_raw_path = system_images_dir + '/verity/system.img.raw'
         dest = shutil.copyfile(system_images_dir+'/system.img.raw', system_image_raw_path)
         system_image_raw_path = system_images_dir + '/verity/system.img.raw'
-        append_verity_metadata_to_system_image2(system_image_raw_path, system_images_dir, staging_dir_hostpkg, rootfs_dir,kdir )
+        append_verity_metadata_to_system_image2(system_image_raw_path, system_images_dir, staging_dir_hostpkg, rootfs_dir, kdir, initramfs_dir, sha_type )
 
