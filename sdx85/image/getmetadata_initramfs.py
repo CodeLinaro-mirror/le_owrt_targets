@@ -197,4 +197,6 @@ if __name__ == "__main__":
         dest = shutil.copyfile(system_images_dir+'/system.img.raw', system_image_raw_path)
         system_image_raw_path = system_images_dir + '/verity/system.img.raw'
         append_verity_metadata_to_system_image2(system_image_raw_path, system_images_dir, staging_dir_hostpkg, rootfs_dir, kdir, initramfs_dir, sha_type )
+        system_image_path = system_images_dir + '/system.img.raw'
+        dest = shutil.copyfile(system_images_dir+'/verity/system.img.raw', system_image_path)
 

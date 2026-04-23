@@ -262,6 +262,12 @@ define Image/mkfs/ubifs
 	$(call Ota/Build/ubi_ab,4k)
 endef
 
+define Image/FitRootfsImage
+	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
+		$(STAGING_DIR_HOST)/bin/mkimage -f $(IMAGE_PRODUCTS_DIR)$(1)/rootfs_unsparse.its -E -p 0x1000 rootfs.itb; \
+	)
+endef
+
 define Image/GenerateExt4Images
 	( cd $(TOPDIR); \
 		$(SED_BIN_PATH) -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' ${IMAGE_ROOTFS}$(1)/etc/passwd; \
@@ -300,16 +306,17 @@ define Image/GenerateExt4Images
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096  -l $(EXT4_IMAGE_SIZE) system.img.raw $(IMAGE_ROOTFS)$(1) \
 	)
 
-        if [ -n "$(PRPL_VERSION)" ]; then \
-	( $(CP) $(CURDIR)/rootfs_unsparse.its $(IMAGE_PRODUCTS_DIR)$(1)/; \
-	  cd $(IMAGE_PRODUCTS_DIR)$(1); \
-	  $(STAGING_DIR_HOST)/bin/mkimage -f $(IMAGE_PRODUCTS_DIR)$(1)/rootfs_unsparse.its -E -p 0x1000 rootfs.itb; \
-	) \
-        fi
+	if [ -n "$(PRPL_VERSION)" ]; then \
+		( $(CP) $(CURDIR)/rootfs_unsparse.its $(IMAGE_PRODUCTS_DIR)$(1)/; \
+		cd $(IMAGE_PRODUCTS_DIR)$(1); \
+		$(call Image/FitRootfsImage); \
+		) \
+	fi
 
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
         if [ -n "$(PRPL_VERSION)" ]; then \
 			python getmetadata_initramfs.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR) $(INITRAMFS_TARGET_DIR) $(TARGET_SHA_TYPE); \
+			$(call Image/FitRootfsImage); \
 		else \
 			python getmetadata.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR); \
 		fi; \
@@ -392,6 +399,7 @@ define Image/mkfs/ext4
 			rm -rf $(RAMDISK_PATH); \
 			$(call Regenerate/Initramfs); \
 			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
+			$(call Image/FitRootfsImage); \
 		else \
 			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
 		fi; \
@@ -403,6 +411,7 @@ define Image/mkfs/ext4
 			rm -rf $(RAMDISK_PATH); \
 			$(call Regenerate/Initramfs); \
 			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
+			$(call Image/FitRootfsImage); \
 		else \
 			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
 		fi; \
