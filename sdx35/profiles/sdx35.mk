@@ -69,6 +69,30 @@ endef
 
 $(eval $(call Profile,mbb))
 
+define Profile/iot
+	NAME:=Qualcomm Technologies Inc., Kuno IOT Profile
+	PACKAGES:=$(OPENWRT_STANDARD) \
+		$(COREBSP_UTILS) $(UTILS) \
+		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTINTERNAL) $(QTISSDK) \
+		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTIRILPROP) \
+		$(QTIBT) $(QTIBTPROP) \
+		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+		$(QTIWLAN) $(QTIWLANPROP) $(QTIWLANIOT) \
+		$(QTICOREINTERNAL) \
+		$(QTIPPATPROP) \
+		$(QTIDATAINTERNAL) \
+		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd bind bind-dig libtirpc subsystem-ramdump -swconfig $(RECOVERYUPDATER)
+endef
+
+define Profile/iot/Description
+	IOT sdx35 package set configuration.
+	Enables complete set of modules for sdx35 target.
+endef
+
+$(eval $(call Profile,iot))
+
 define Profile/m2
 	NAME:=Qualcomm Technologies Inc., Kuno Profile
 	PACKAGES:=$(OPENWRT_STANDARD) \
