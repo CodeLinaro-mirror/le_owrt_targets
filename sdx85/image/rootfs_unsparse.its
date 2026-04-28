@@ -1,0 +1,33 @@
+/*
+* Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.​
+*
+* SPDX-License-Identifier: BSD-3-Clause-Clear
+*/
+
+/dts-v1/;
+
+/ {
+    description = "RootFS FIT Image";
+    #address-cells = <1>;
+
+    images {
+        rootfs {
+            description = "Main RootFS image";
+            data = /incbin/("system.img.raw");
+            type = "ramdisk";
+            arch = "arm64";
+            os = "linux";
+            compression = "none";
+            version = "1.0";
+        };
+    };
+
+    configurations {
+        default = "conf-1";
+
+        conf-1 {
+            description = "RootFS only";
+            ramdisk = "rootfs";
+        };
+    };
+};
