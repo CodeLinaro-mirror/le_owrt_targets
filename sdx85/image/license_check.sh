@@ -79,6 +79,10 @@ if [[ $PROFILE == "recovery" ]]; then
     echo -e "\nRecovery Profile."
     directory="$BUILD_DIR/recovery/root-$BOARD/usr/lib/opkg/info"
     check_packages_license "$directory"
+elif [[ $PROFILE == "initramfs" ]]; then
+    echo -e "\ninitramfs Profile."
+    directory="$BUILD_DIR/initramfs/root-$BOARD/usr/lib/opkg/info"
+    check_packages_license "$directory"
 else
     echo -e "\n${PROFILE^} Profile."
     directory="$BUILD_DIR/root-$BOARD/usr/lib/opkg/info"
