@@ -59,7 +59,11 @@ EXT4_IMAGE_SIZE =  477626880
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
+ifeq ($(PROFILE),cpe-min)
+KERNEL_CMDLINE = "ro rootwait mem=649M console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
+else
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
+endif
 endif
 
 ROOTFS_VOLUME_SIZE_AB = "120MiB"
@@ -78,9 +82,12 @@ else
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
 endif
 
-
 ifeq ($(TARGET_VARIANT),perf)
+ifeq ($(PROFILE),cpe-min)
+KERNEL_CMDLINE = "ro rootwait mem=649M console=ttynull androidboot.hardware=qcom msm_rtb.filter=0x237 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
+else
 KERNEL_CMDLINE = "ro rootwait console=ttynull androidboot.hardware=qcom msm_rtb.filter=0x237 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
+endif
 endif
 
 TARGET_SHA_TYPE = "sha256"
@@ -301,6 +308,7 @@ define Image/GenerateExt4Images
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096  -l $(EXT4_IMAGE_SIZE) system.img.raw $(IMAGE_ROOTFS)$(1) \
 	)
+
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
         if [ -n "$(PRPL_VERSION)" ]; then \
 			python getmetadata_initramfs.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR) $(INITRAMFS_TARGET_DIR) $(TARGET_SHA_TYPE); \
@@ -309,6 +317,14 @@ define Image/GenerateExt4Images
 		fi; \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR)$(1)/system.img ]; do sleep 1; done; \
 	fi
+
+	if [ -n "$(PRPL_VERSION)" ]; then \
+		( $(CP) $(CURDIR)/rootfs_unsparse.its $(IMAGE_PRODUCTS_DIR)$(1)/; \
+			cd $(IMAGE_PRODUCTS_DIR)$(1); \
+			$(STAGING_DIR_HOST)/bin/mkimage -f $(IMAGE_PRODUCTS_DIR)$(1)/rootfs_unsparse.its -E -p 0x1000 rootfs.itb; \
+		) \
+	fi
+
 endef
 
 define Image/GenerateBootImage
