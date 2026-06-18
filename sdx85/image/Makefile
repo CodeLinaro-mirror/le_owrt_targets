@@ -6,6 +6,8 @@ include $(TOPDIR)/owrt-qti-bsp/include/ota-ext4.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-ubi.mk
 include $(TOPDIR)/owrt-qti-bsp/include/abota-ext4.mk
 include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
+include $(TOPDIR)/owrt-qti-bsp/include/ota-emmc-squashfs.mk
+include $(TOPDIR)/owrt-qti-bsp/include/abota-emmc-squashfs.mk
 include generate-build-prop.mk
 
 KERNEL_BASEADDR = 0x80000000
@@ -434,6 +436,8 @@ define Image/mkfs/ext4
 	fi
 	$(call Ota/Build/releasetools-native)
 	$(if $(PRPL_VERSION),,$(call Ota/Build/ext4-full))
+	$(if $(PRPL_VERSION),$(call Ota/Build/emmc_squash))
+	$(if $(PRPL_VERSION),$(call Ota/Build/emmc_squash_ab))
 endef
 
 endif
