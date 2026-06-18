@@ -291,31 +291,36 @@ define Image/GenerateExt4Images
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
                 fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /persist -s -b 4096 -l $(PERSIST_SIZE_EXT4) persist.img $(IMAGE_ROOTFS)$(1)/persist \
-        )
-        if [ -n "$(PRPL_VERSION)" ]; then \
-        ( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-                fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /lcm -s -b 4096 -l $(LCM_SIZE_EXT4) lcm.img $(IMAGE_ROOTFS)$(1)/lcm; \
-          cd $(IMAGE_PRODUCTS_DIR)$(1); \
-                fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /cfg -s -b 4096 -l $(CFG_SIZE_EXT4) cfg.img $(IMAGE_ROOTFS)$(1)/cfg; \
-        ) \
+   )
+   if [ -n "$(PRPL_VERSION)" ]; then \
+   ( cd $(IMAGE_PRODUCTS_DIR)$(1); \
+          fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /lcm -s -b 4096 -l $(LCM_SIZE_EXT4) lcm.img $(IMAGE_ROOTFS)$(1)/lcm; \
+     cd $(IMAGE_PRODUCTS_DIR)$(1); \
+          fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /cfg -s -b 4096 -l $(CFG_SIZE_EXT4) cfg.img $(IMAGE_ROOTFS)$(1)/cfg; \
+     cd $(IMAGE_PRODUCTS_DIR)$(1); \
+          fakeroot $(STAGING_DIR_HOST)/bin/mksquashfs4 $(IMAGE_ROOTFS)$(1) system.squashfs -noappend -comp xz -noI -processors 1; \
+    ); \
+    else \
+		( cd $(IMAGE_PRODUCTS_DIR)$(1); \
+			fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096 -s -l $(EXT4_IMAGE_SIZE) system.img $(IMAGE_ROOTFS)$(1); \
+		); \
+		( cd $(IMAGE_PRODUCTS_DIR)$(1); \
+			fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096  -l $(EXT4_IMAGE_SIZE) system.img.raw $(IMAGE_ROOTFS)$(1); \
+		); \
 	fi
 	if [ $(CONFIG_OTA_RECOVERY_UPDATE) == y ]; then \
 		$(call Ota/Build/compute_sha1); \
 	fi
-	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096 -s -l $(EXT4_IMAGE_SIZE) system.img $(IMAGE_ROOTFS)$(1) \
-	)
-	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096  -l $(EXT4_IMAGE_SIZE) system.img.raw $(IMAGE_ROOTFS)$(1) \
-	)
+	
 
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
         if [ -n "$(PRPL_VERSION)" ]; then \
-			python getmetadata_initramfs.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR) $(INITRAMFS_TARGET_DIR) $(TARGET_SHA_TYPE); \
+			python getmetadata_squashfs_initramfs.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR) $(INITRAMFS_TARGET_DIR) $(TARGET_SHA_TYPE); \
+			while [ ! -f  $(IMAGE_PRODUCTS_DIR)$(1)/system.squashfs ]; do sleep 1; done; \
 		else \
 			python getmetadata.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR); \
+      while [ ! -f  $(IMAGE_PRODUCTS_DIR)$(1)/system.img ]; do sleep 1; done; \
 		fi; \
-		while [ ! -f  $(IMAGE_PRODUCTS_DIR)$(1)/system.img ]; do sleep 1; done; \
 	fi
 
 	if [ -n "$(PRPL_VERSION)" ]; then \
@@ -390,6 +395,12 @@ define Ota/Build/ext4
 endef
 endif
 
+define Ota/Build/ext4-full
+	$(call Ota/Build/ext4)
+	$(call Ota/Build/target-files-zip-ext4-ab)
+	$(call Ota/Build/gen_ota_full_zip_ext4_ab)
+endef
+
 define Regenerate/Initramfs
 ( cd $(INITRAMFS_TARGET_DIR); find . | $(STAGING_DIR_HOST)/bin/cpio -o -H newc -R 0:0 | gzip -9n >$(RAMDISK_PATH) )
 endef
@@ -401,7 +412,7 @@ define Image/mkfs/ext4
 		if [ -n "$(PRPL_VERSION)" ]; then \
 			rm -rf $(RAMDISK_PATH); \
 			$(call Regenerate/Initramfs); \
-			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
+			python  getmetadata_squashfs_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
 		else \
 			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
 		fi; \
@@ -412,7 +423,7 @@ define Image/mkfs/ext4
 		if [ -n "$(PRPL_VERSION)" ]; then \
 			rm -rf $(RAMDISK_PATH); \
 			$(call Regenerate/Initramfs); \
-			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
+			python  getmetadata_squashfs_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
 		else \
 			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
 		fi; \
@@ -422,9 +433,7 @@ define Image/mkfs/ext4
 		$(call Image/ReGenerateBootImage); \
 	fi
 	$(call Ota/Build/releasetools-native)
-	$(call Ota/Build/ext4)
-	$(call Ota/Build/target-files-zip-ext4-ab)
-	$(call Ota/Build/gen_ota_full_zip_ext4_ab)
+	$(if $(PRPL_VERSION),,$(call Ota/Build/ext4-full))
 endef
 
 endif
