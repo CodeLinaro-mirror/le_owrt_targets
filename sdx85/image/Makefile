@@ -18,7 +18,8 @@ ifneq ($(PRPL_VERSION),)
 USERDATA_SIZE_EXT4 = 1578400482
 USERDATA_SIZE_EXT4-ab = 1073741824
 endif
-SYSTEMRW_IMAGE_ROOTFS_SIZE = 8192KB
+SYSTEMRW_IMAGE_ROOTFS_SIZE = 16384KB
+SYSTEMRW_INODE_OPTS :=
 UBINIZE_CFG = ubinize-$(BOARD).cfg
 UBINIZE_CFG_AB = ubinize-$(BOARD)-ab.cfg
 RECOVERY_UBINIZE_CFG = ubinize-recoveryfs.cfg
@@ -32,12 +33,22 @@ BUILD_PROP = build.prop
 PERSIST_SIZE_EXT4 = 8192KB
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.8/sed/sed
 
+RAMDISK_PATH = /dev/null
+RAMDISK_OFFSET = 0x0
+
+ifneq ($(PRPL_VERSION),)
+RAMDISK_PATH = $(TOPDIR)/bin/targets/$(BOARD)/generic/openwrt-$(BOARD)-rootfs.cpio.gz
+RAMDISK_OFFSET = 0x01000000
+INITRAMFS_TARGET_DIR = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/initramfs/root-$(BOARD)
+endif
+
 ifneq ($(PRPL_VERSION),)
 LCM_SIZE_EXT4 = 1073741824
 CFG_SIZE_EXT4 =16384KB
 UBINIZE_CFG_LCM = ubinize-$(BOARD)-lcm.cfg
 UBINIZE_CFG_CFG = ubinize-$(BOARD)-cfg.cfg
 SYSTEMRW_IMAGE_ROOTFS_SIZE = 16384KB
+SYSTEMRW_INODE_OPTS = -i 2048
 endif
 ifeq ($(OWRT_VERSION),23.05)
 SED_BIN_PATH = $(TOPDIR)/build_dir/host/sed-4.9/sed/sed
@@ -48,7 +59,11 @@ EXT4_IMAGE_SIZE =  477626880
 endif
 
 ifeq ($(TARGET_VARIANT),debug)
+ifeq ($(PROFILE),cpe-min)
+KERNEL_CMDLINE = "ro rootwait mem=649M console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
+else
 KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qcom msm_rtb.filter=0x237 androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
+endif
 endif
 
 ROOTFS_VOLUME_SIZE_AB = "120MiB"
@@ -67,15 +82,20 @@ else
 ROOTFS_VOLUME_SIZE = $(SYSTEM_VOLUME_SIZE_G)
 endif
 
-
 ifeq ($(TARGET_VARIANT),perf)
+ifeq ($(PROFILE),cpe-min)
+KERNEL_CMDLINE = "ro rootwait mem=649M console=ttynull androidboot.hardware=qcom msm_rtb.filter=0x237 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
+else
 KERNEL_CMDLINE = "ro rootwait console=ttynull androidboot.hardware=qcom msm_rtb.filter=0x237 lpm_levels.sleep_disabled=1 firmware_class.path=/lib/firmware/updates,/firmware/image service_locator.enable=1 net.ifnames=0 atlantic_fwd.rx_ring_size=512 atlantic_fwd.rx_linear=1 pcie_ports=compat pci=pcie_bus_safe"
+endif
 endif
 
 TARGET_SHA_TYPE = "sha256"
 
 ifeq ($(PROFILE),recovery)
 IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/recovery/root-$(BOARD)
+else ifeq ($(PROFILE),initramfs)
+IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/initramfs/root-$(BOARD)
 else
 IMAGE_ROOTFS = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/root-$(BOARD)
 IMAGE_ROOTFS_AB = $(TOPDIR)/build_dir/target-$(ARCH)_$(CPU_TYPE)_musl/root-$(BOARD)-ab
@@ -160,6 +180,16 @@ define Image/mkfs/ext4
 	)
 endef
 
+else ifeq ($(PROFILE),initramfs)
+define Image/Prepare
+	$(call LicenseCheck)
+	mkdir -p $(IMAGE_ROOTFS)/lib/modules/$(UNAME_VERSION)
+endef
+
+define Image/mkfs/ext4
+	@true
+endef
+
 else
 
 define Image/Prepare
@@ -174,6 +204,7 @@ define Image/Prepare
 	mkdir -p ${IMAGE_ROOTFS}/lcm; \
 	mkdir -p ${IMAGE_ROOTFS}/cfg; \
 	mkdir -p ${IMAGE_ROOTFS}/data_bkp; \
+	mkdir -p ${IMAGE_ROOTFS}/ext; \
 	fi
 	mkdir -p $(IMAGE_PRODUCTS_DIR_AB)
 	$(call Image/GenerateBuildProp)
@@ -253,7 +284,7 @@ define Image/GenerateExt4Images
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B userdata.map -a /data -b 4096 -s -l $(USERDATA_SIZE_EXT4$(1)) userdata.img $(IMAGE_ROOTFS)$(1)/data \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
-		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B systemrw.map -a /systemrw -s -b 4096 -l $(SYSTEMRW_IMAGE_ROOTFS_SIZE) systemrw.img $(IMAGE_ROOTFS)$(1)/overlay \
+		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -B systemrw.map -a /systemrw -s -b 4096 $(SYSTEMRW_INODE_OPTS) -l $(SYSTEMRW_IMAGE_ROOTFS_SIZE) systemrw.img $(IMAGE_ROOTFS)$(1)/overlay \
 	)
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs -a /cache -s -b 4096 -l $(CACHE_SIZE_EXT4) cache.img $(IMAGE_ROOTFS)$(1)/cache \
@@ -277,10 +308,23 @@ define Image/GenerateExt4Images
 	( cd $(IMAGE_PRODUCTS_DIR)$(1); \
 		fakeroot $(STAGING_DIR_HOSTPKG)/bin/make_ext4fs $(SELINUX_EXT4_OPTS) -B system.map -a / -b 4096  -l $(EXT4_IMAGE_SIZE) system.img.raw $(IMAGE_ROOTFS)$(1) \
 	)
+
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		python getmetadata.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR); \
+        if [ -n "$(PRPL_VERSION)" ]; then \
+			python getmetadata_initramfs.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR) $(INITRAMFS_TARGET_DIR) $(TARGET_SHA_TYPE); \
+		else \
+			python getmetadata.py  $(EXT4_IMAGE_SIZE) $(STAGING_DIR_HOSTPKG) $(IMAGE_PRODUCTS_DIR)$(1) $(IMAGE_ROOTFS)$(1)  $(KDIR); \
+		fi; \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR)$(1)/system.img ]; do sleep 1; done; \
 	fi
+
+	if [ -n "$(PRPL_VERSION)" ]; then \
+		( $(CP) $(CURDIR)/rootfs_unsparse.its $(IMAGE_PRODUCTS_DIR)$(1)/; \
+			cd $(IMAGE_PRODUCTS_DIR)$(1); \
+			$(STAGING_DIR_HOST)/bin/mkimage -f $(IMAGE_PRODUCTS_DIR)$(1)/rootfs_unsparse.its -E -p 0x1000 rootfs.itb; \
+		) \
+	fi
+
 endef
 
 define Image/GenerateBootImage
@@ -294,7 +338,7 @@ define Image/GenerateBootImage
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR); \
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR_AB); \
 		$(KDIR)/build-tools/mkbootimg/mkbootimg.py --kernel $(KDIR)/Image \
-		--cmdline $(KERNEL_CMDLINE) --pagesize 4096 --base $(KERNEL_BASEADDR) --header_version 2 --ramdisk /dev/null --ramdisk_offset 0x0 --dtb $(KDIR)/dtb.img --output boot.img; \
+		--cmdline $(KERNEL_CMDLINE) --pagesize 4096 --base $(KERNEL_BASEADDR) --header_version 2 --ramdisk $(RAMDISK_PATH) --ramdisk_offset $(RAMDISK_OFFSET) --dtb $(KDIR)/dtb.img --output boot.img; \
 	)
 	( cd $(KDIR); \
 		$(CP) boot.img boot.img.nonsecure; \
@@ -346,16 +390,32 @@ define Ota/Build/ext4
 endef
 endif
 
+define Regenerate/Initramfs
+( cd $(INITRAMFS_TARGET_DIR); find . | $(STAGING_DIR_HOST)/bin/cpio -o -H newc -R 0:0 | gzip -9n >$(RAMDISK_PATH) )
+endef
+
 define Image/mkfs/ext4
 	$(call Image/GenerateBootImage)
 	$(call Image/GenerateExt4Images)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
+		if [ -n "$(PRPL_VERSION)" ]; then \
+			rm -rf $(RAMDISK_PATH); \
+			$(call Regenerate/Initramfs); \
+			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
+		else \
+			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
+		fi; \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR)/boot.img ]; do sleep 1; done; \
 	fi
 	$(call Image/GenerateExt4Images,-ab)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB);\
+		if [ -n "$(PRPL_VERSION)" ]; then \
+			rm -rf $(RAMDISK_PATH); \
+			$(call Regenerate/Initramfs); \
+			python  getmetadata_initramfs.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR_AB) $(RAMDISK_PATH) $(RAMDISK_OFFSET);\
+		else \
+			python  getmetadata.py $(KDIR) $(KERNEL_CMDLINE) $(KERNEL_BASEADDR) $(IMAGE_PRODUCTS_DIR);\
+		fi; \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR_AB)/boot.img ]; do sleep 1; done; \
 	fi
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
