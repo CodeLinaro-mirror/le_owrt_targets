@@ -1,5 +1,7 @@
 include $(TOPDIR)/owrt-qti-conf/sdx.mk
 include $(TOPDIR)/owrt-qti-ppat-prop/qtippatprop.mk
+-include $(TOPDIR)/owrt-qti-telsdk/qtitelsdk.mk
+-include $(TOPDIR)/owrt-qti-telsdk-prop/qtitelsdkprop.mk
 
 ifeq ($(CONFIG_OTA_RECOVERY_UPDATE),y)
 RECOVERYUPDATER=recovery-updater
@@ -69,6 +71,30 @@ endef
 
 $(eval $(call Profile,mbb))
 
+define Profile/mbb-nbntn
+	NAME:=Qualcomm Technologies Inc., Kuno Profile
+	PACKAGES:=$(OPENWRT_STANDARD) \
+		$(COREBSP_UTILS) $(UTILS) \
+		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+		$(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTINTERNAL) $(QTISSDK) \
+		$(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTIRILPROP) \
+		$(QTIBT) $(QTIBTPROP) \
+		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
+		$(QTIWLAN) $(QTIWLANPROP) \
+		$(QTICOREINTERNAL) \
+		$(QTIPPATPROP) \
+		$(QTIDATAINTERNAL) \
+		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
+		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd bind bind-dig libtirpc subsystem-ramdump -swconfig $(RECOVERYUPDATER)
+endef
+
+define Profile/mbb-nbntn/Description
+	Mbb-nbntn sdx35 package set configuration.
+	Enables complete set of modules for sdx35 mbb-nbntn target.
+endef
+
+$(eval $(call Profile,mbb-nbntn))
+
 define Profile/iot
 	NAME:=Qualcomm Technologies Inc., Kuno IOT Profile
 	PACKAGES:=$(OPENWRT_STANDARD) \
@@ -83,6 +109,7 @@ define Profile/iot
 		$(QTIPPATPROP) \
 		$(QTIDATAINTERNAL) \
 		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
+		$(QTITELSDK) $(QTITELSDKPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd bind bind-dig libtirpc subsystem-ramdump -swconfig $(RECOVERYUPDATER)
 endef
 
