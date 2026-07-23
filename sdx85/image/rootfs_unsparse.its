@@ -13,7 +13,7 @@
     images {
         rootfs {
             description = "Main RootFS image";
-            data = /incbin/("system.img.raw");
+            data = /incbin/("system.squashfs");
             type = "ramdisk";
             arch = "arm64";
             os = "linux";
