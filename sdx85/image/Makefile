@@ -9,6 +9,7 @@ include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-emmc-squashfs.mk
 include $(TOPDIR)/owrt-qti-bsp/include/abota-emmc-squashfs.mk
 include generate-build-prop.mk
+include $(TOPDIR)/owrt-qti-bsp-prop/include/encrypt-boot-image.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
@@ -362,6 +363,7 @@ define Image/GenerateBootImage
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR_AB); \
 		$(CP) $(IMAGE_PRODUCTS_DIR)/abl.elf $(IMAGE_PRODUCTS_DIR_AB); \
 	)
+	$(if $(filter y,$(CONFIG_BOOT_IMAGE_ENCRYPTION)),$(if $(filter y,$(CONFIG_PACKAGE_dmverity-utils)),,$(call Image/EncryptBootImage,$(IMAGE_PRODUCTS_DIR)); $(call Image/EncryptBootImage,$(IMAGE_PRODUCTS_DIR_AB))))
 
 endef
 
@@ -389,6 +391,7 @@ define Image/ReGenerateBootImage
 		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
 		mv -f boot.img.secure boot.img; \
 	)
+	$(if $(filter y,$(CONFIG_BOOT_IMAGE_ENCRYPTION)),$(call Image/EncryptBootImage,$(IMAGE_PRODUCTS_DIR)); $(call Image/EncryptBootImage,$(IMAGE_PRODUCTS_DIR_AB)))
 endef
 
 ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.img), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
@@ -431,9 +434,7 @@ define Image/mkfs/ext4
 		fi; \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR_AB)/boot.img ]; do sleep 1; done; \
 	fi
-	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		$(call Image/ReGenerateBootImage); \
-	fi
+	$(if $(filter y,$(CONFIG_PACKAGE_dmverity-utils)),$(call Image/ReGenerateBootImage))
 	$(call Ota/Build/releasetools-native)
 	$(if $(PRPL_VERSION),,$(call Ota/Build/ext4-full))
 	$(if $(PRPL_VERSION),$(call Ota/Build/emmc_squash))
