@@ -129,6 +129,9 @@ OWRT_VERSION_INT := $(shell echo $(OWRT_VERSION) | sed 's/\.//g')
 # Define the threshold version as an integer
 THRESHOLD_VERSION_INT := 2400
 
+PUBLIC_KEY := $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/enckey/kobuk_l1_public_key.bin
+SEC_PROFILE := $(TOPDIR)/owrt-qti-bsp-prop/security-packages/sectools/kobuk_tz_security_profile.xml
+
 define LicenseCheck
 	@if [ $(OWRT_VERSION_INT) -ge $(THRESHOLD_VERSION_INT) ]; then \
 		rm -f $(IMAGE_PRODUCTS_DIR)/Error_license.log; \
@@ -327,12 +330,22 @@ define Image/GenerateExt4Images
 	fi
 
 	if [ -n "$(PRPL_VERSION)" ]; then \
+		if [ $(CONFIG_PACKAGE_encrypt-utils) == y ]; then \
+			python encrypt_squashfs_cryptsetup.py $(IMAGE_PRODUCTS_DIR)$(1)/system.squashfs $(IMAGE_PRODUCTS_DIR)$(1)/system_encrypt.squashfs key.bin aes-xts 512 $(IMAGE_PRODUCTS_DIR)$(1) ; \
+		fi; \
 		( $(CP) $(CURDIR)/rootfs_unsparse.its $(IMAGE_PRODUCTS_DIR)$(1)/; \
 			cd $(IMAGE_PRODUCTS_DIR)$(1); \
 			$(STAGING_DIR_HOST)/bin/mkimage -f $(IMAGE_PRODUCTS_DIR)$(1)/rootfs_unsparse.its -E -p 0x1000 rootfs.itb; \
 		) \
 	fi
 
+endef
+
+define Image/KeyGeneration
+(	if [ $(CONFIG_PACKAGE_encrypt-utils) == y ]; then \
+		sh ./generate_rootfs_key_blob.sh rootfs 64 "$(INITRAMFS_TARGET_DIR)" "$(SEC_PATH)" "$(SEC_PROFILE)" "$(PUBLIC_KEY)"; \
+	fi; \
+)
 endef
 
 define Image/GenerateBootImage
@@ -412,6 +425,7 @@ endef
 
 define Image/mkfs/ext4
 	$(call Image/GenerateBootImage)
+	$(call Image/KeyGeneration)
 	$(call Image/GenerateExt4Images)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
 		if [ -n "$(PRPL_VERSION)" ]; then \
