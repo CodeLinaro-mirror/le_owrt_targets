@@ -1,0 +1,22 @@
+#
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+
+config BOOT_IMAGE_ENCRYPTION
+	bool "Enable AES-256-GCM boot image encryption"
+	depends on TARGET_sdx85
+	default n
+	help
+	  Encrypt boot.img using AES-256-GCM via sectools. Requires
+	  owrt-qti-bsp-prop/support-packages/sectool5 keys to be present.
+	  When disabled, boot.img is left unencrypted (default).
+
+config BOOT_IMAGE_KEEP_UNENCRYPTED
+	bool "Keep unencrypted boot image (boot_noenc.img) after encryption"
+	depends on BOOT_IMAGE_ENCRYPTION
+	default y
+	help
+	  When enabled, the original unencrypted boot.img is preserved as
+	  boot_noenc.img in the image products directories after encryption.
+	  When disabled, the unencrypted image is deleted after encryption.
