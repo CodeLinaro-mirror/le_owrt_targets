@@ -129,7 +129,7 @@ OWRT_VERSION_INT := $(shell echo $(OWRT_VERSION) | sed 's/\.//g')
 # Define the threshold version as an integer
 THRESHOLD_VERSION_INT := 2400
 
-PUBLIC_KEY := $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/enckey/kobuk_l1_public_key.bin
+PUBLIC_KEY := $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/enckey/kobuk_l1_sec_public_key.bin
 SEC_PROFILE_PATH := $(TOPDIR)/owrt-qti-bsp-prop/security-packages/sectools/kobuk_tz_security_profile.xml
 
 define LicenseCheck
