@@ -345,6 +345,9 @@ define Image/KeyGeneration
 (	if [ $(CONFIG_PACKAGE_encrypt-utils) == y ]; then \
 		sh ./generate_rootfs_key_blob.sh rootfs 64 "$(INITRAMFS_TARGET_DIR)" "$(SEC_PATH)" "$(SEC_PROFILE_PATH)" "$(PUBLIC_KEY)"; \
 	fi; \
+	if [ $(CONFIG_PACKAGE_secure-fscrypt) == y ]; then \
+		sh ./generate_rw_key_blob.sh rootfs 64 "$(IMAGE_ROOTFS)" "$(SEC_PATH)" "$(SEC_PROFILE_PATH)" "$(PUBLIC_KEY)"; \
+	fi; \
 )
 endef
 
