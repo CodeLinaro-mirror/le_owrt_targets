@@ -8,6 +8,8 @@ include $(TOPDIR)/owrt-qti-ipq-prop/qtiipqprop.mk
 include $(TOPDIR)/owrt-qti-ipq/qtiipq.mk
 -include $(TOPDIR)/owrt-qti-ipq-ezmesh/feeds/qtiipqezmesh.mk
 -include $(TOPDIR)/owrt-qti-wlan/qtiwlan.mk
+-include $(TOPDIR)/owrt-qti-dataplatform-prop/qtidataplatformprop.mk
+-include $(TOPDIR)/owrt-qti-dataplatform-oss/qtidataplatformoss.mk
 else
 -include $(TOPDIR)/owrt-qti-ipq-open/qtiipqopen.mk
 endif
@@ -61,6 +63,7 @@ define Profile/cpe
 		$(QTIIPQ) $(QTIIPQPROP) $(QTIPRPLOPEN) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIMSDCPROP) $(QTIEMERGENCYALERTPROP) $(QTIIPQEZMESH) \
+                $(QTIDATAPLATFORMPROP) $(QTIDATAPLATFORMOSS) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig
 endef
 
