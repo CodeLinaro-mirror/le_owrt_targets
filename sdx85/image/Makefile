@@ -9,6 +9,7 @@ include $(TOPDIR)/owrt-qti-bsp/include/abota-ubi.mk
 include $(TOPDIR)/owrt-qti-bsp/include/ota-emmc-squashfs.mk
 include $(TOPDIR)/owrt-qti-bsp/include/abota-emmc-squashfs.mk
 include generate-build-prop.mk
+include $(TOPDIR)/owrt-qti-bsp-prop/include/encrypt-boot-image.mk
 
 KERNEL_BASEADDR = 0x80000000
 EXT4_IMAGE_SIZE = 262144000
@@ -68,7 +69,7 @@ KERNEL_CMDLINE = "ro rootwait console=ttyMSM0,115200,n8 androidboot.hardware=qco
 endif
 endif
 
-ROOTFS_VOLUME_SIZE_AB = "120MiB"
+ROOTFS_VOLUME_SIZE_AB = "124MiB"
 SYSTEM_VOLUME_SIZE_G = "150MiB"
 SYSTEM_VOLUME_SIZE = "110MiB"
 SYSTEM_VOLUME_SIZE_512 = "66MiB"
@@ -127,6 +128,9 @@ OWRT_VERSION_INT := $(shell echo $(OWRT_VERSION) | sed 's/\.//g')
 
 # Define the threshold version as an integer
 THRESHOLD_VERSION_INT := 2400
+
+PUBLIC_KEY := $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/enckey/kobuk_l1_sec_public_key.bin
+SEC_PROFILE_PATH := $(TOPDIR)/owrt-qti-bsp-prop/security-packages/sectools/kobuk_tz_security_profile.xml
 
 define LicenseCheck
 	@if [ $(OWRT_VERSION_INT) -ge $(THRESHOLD_VERSION_INT) ]; then \
@@ -326,12 +330,22 @@ define Image/GenerateExt4Images
 	fi
 
 	if [ -n "$(PRPL_VERSION)" ]; then \
+		if [ $(CONFIG_PACKAGE_encrypt-utils) == y ]; then \
+			python encrypt_squashfs_cryptsetup.py $(IMAGE_PRODUCTS_DIR)$(1)/system.squashfs $(IMAGE_PRODUCTS_DIR)$(1)/system_encrypt.squashfs key.bin aes-xts 512 $(IMAGE_PRODUCTS_DIR)$(1) ; \
+		fi; \
 		( $(CP) $(CURDIR)/rootfs_unsparse.its $(IMAGE_PRODUCTS_DIR)$(1)/; \
 			cd $(IMAGE_PRODUCTS_DIR)$(1); \
 			$(STAGING_DIR_HOST)/bin/mkimage -f $(IMAGE_PRODUCTS_DIR)$(1)/rootfs_unsparse.its -E -p 0x1000 rootfs.itb; \
 		) \
 	fi
 
+endef
+
+define Image/KeyGeneration
+(	if [ $(CONFIG_PACKAGE_encrypt-utils) == y ]; then \
+		sh ./generate_rootfs_key_blob.sh rootfs 64 "$(INITRAMFS_TARGET_DIR)" "$(SEC_PATH)" "$(SEC_PROFILE_PATH)" "$(PUBLIC_KEY)"; \
+	fi; \
+)
 endef
 
 define Image/GenerateBootImage
@@ -362,6 +376,7 @@ define Image/GenerateBootImage
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR_AB); \
 		$(CP) $(IMAGE_PRODUCTS_DIR)/abl.elf $(IMAGE_PRODUCTS_DIR_AB); \
 	)
+	$(if $(filter y,$(CONFIG_BOOT_IMAGE_ENCRYPTION)),$(if $(filter y,$(CONFIG_PACKAGE_dmverity-utils)),,$(call Image/EncryptBootImage,$(IMAGE_PRODUCTS_DIR)); $(call Image/EncryptBootImage,$(IMAGE_PRODUCTS_DIR_AB))))
 
 endef
 
@@ -389,6 +404,7 @@ define Image/ReGenerateBootImage
 		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
 		mv -f boot.img.secure boot.img; \
 	)
+	$(if $(filter y,$(CONFIG_BOOT_IMAGE_ENCRYPTION)),$(call Image/EncryptBootImage,$(IMAGE_PRODUCTS_DIR)); $(call Image/EncryptBootImage,$(IMAGE_PRODUCTS_DIR_AB)))
 endef
 
 ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.img), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
@@ -409,6 +425,7 @@ endef
 
 define Image/mkfs/ext4
 	$(call Image/GenerateBootImage)
+	$(call Image/KeyGeneration)
 	$(call Image/GenerateExt4Images)
 	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
 		if [ -n "$(PRPL_VERSION)" ]; then \
@@ -431,9 +448,7 @@ define Image/mkfs/ext4
 		fi; \
 		while [ ! -f  $(IMAGE_PRODUCTS_DIR_AB)/boot.img ]; do sleep 1; done; \
 	fi
-	if [ $(CONFIG_PACKAGE_dmverity-utils) == y ]; then \
-		$(call Image/ReGenerateBootImage); \
-	fi
+	$(if $(filter y,$(CONFIG_PACKAGE_dmverity-utils)),$(call Image/ReGenerateBootImage))
 	$(call Ota/Build/releasetools-native)
 	$(if $(PRPL_VERSION),,$(call Ota/Build/ext4-full))
 	$(if $(PRPL_VERSION),$(call Ota/Build/emmc_squash))
