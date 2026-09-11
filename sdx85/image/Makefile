@@ -129,8 +129,8 @@ OWRT_VERSION_INT := $(shell echo $(OWRT_VERSION) | sed 's/\.//g')
 # Define the threshold version as an integer
 THRESHOLD_VERSION_INT := 2400
 
-PUBLIC_KEY := $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/enckey/kobuk_l1_public_key.bin
-SEC_PROFILE := $(TOPDIR)/owrt-qti-bsp-prop/security-packages/sectools/kobuk_tz_security_profile.xml
+PUBLIC_KEY := $(TOPDIR)/owrt-qti-bsp-prop/support-packages/sectool5/enckey/kobuk_l1_sec_public_key.bin
+SEC_PROFILE_PATH := $(TOPDIR)/owrt-qti-bsp-prop/security-packages/sectools/kobuk_tz_security_profile.xml
 
 define LicenseCheck
 	@if [ $(OWRT_VERSION_INT) -ge $(THRESHOLD_VERSION_INT) ]; then \
@@ -343,7 +343,10 @@ endef
 
 define Image/KeyGeneration
 (	if [ $(CONFIG_PACKAGE_encrypt-utils) == y ]; then \
-		sh ./generate_rootfs_key_blob.sh rootfs 64 "$(INITRAMFS_TARGET_DIR)" "$(SEC_PATH)" "$(SEC_PROFILE)" "$(PUBLIC_KEY)"; \
+		sh ./generate_rootfs_key_blob.sh rootfs 64 "$(INITRAMFS_TARGET_DIR)" "$(SEC_PATH)" "$(SEC_PROFILE_PATH)" "$(PUBLIC_KEY)"; \
+	fi; \
+	if [ $(CONFIG_PACKAGE_secure-fscrypt) == y ]; then \
+		sh ./generate_rw_key_blob.sh rootfs 64 "$(IMAGE_ROOTFS)" "$(SEC_PATH)" "$(SEC_PROFILE_PATH)" "$(PUBLIC_KEY)"; \
 	fi; \
 )
 endef
