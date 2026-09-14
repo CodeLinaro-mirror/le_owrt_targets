@@ -416,6 +416,16 @@ define Ota/Build/ext4
 endef
 endif
 
+# Guard the PRPL squashfs OTA path the same way as ext4 above: Ota/Build/emmc_squash
+# copies from $(RECOVERY_ROOTFS_PATH) (recovery/root-$(BOARD)), so if the recovery
+# profile has not been built that copy hard-fails. Override the macro at parse time
+# with a warning-only stub so a main-only build degrades gracefully instead of erroring.
+ifeq ($(wildcard $(RECOVERY_ROOTFS_PATH)),)
+define Ota/Build/emmc_squash
+	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure recovery profile has been built!")
+endef
+endif
+
 define Ota/Build/ext4-full
 	$(call Ota/Build/ext4)
 	$(call Ota/Build/target-files-zip-ext4-ab)
