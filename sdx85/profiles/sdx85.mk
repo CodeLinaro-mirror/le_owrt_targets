@@ -1,3 +1,5 @@
+qti_exclude_filter = $(filter-out $($(1)_EXCLUDE_$(2)),$($(1)))
+qti_exclude_filter_all = $(foreach g,$(1),$(call qti_exclude_filter,$(g),$(2)))
 include $(TOPDIR)/owrt-qti-conf/sdx.mk
 ifeq ($(PRPL_VERSION),)
 -include $(TOPDIR)/owrt-qti-msdc-prop/qtimsdcprop.mk
@@ -69,17 +71,19 @@ endef
 
 $(eval $(call Profile,cpe))
 
+QTIGROUPS_cpe-min:=QTIBSP QTIBSPPROP QTICORE QTICOREPROP QTISSMGR QTISSMGRPROP \
+	QTICOREINTERNAL QTISENSORSPROP QTINTERNAL \
+	QTIDATA QTIDATAPROP QTIDATAINTERNAL \
+	QTIPERFPROP \
+	QTIIPQ QTIIPQPROP \
+	QTISECURITY QTISECURITYPROP QTISECURITYINTERNAL \
+	QTIEMERGENCYALERTPROP
+
 define Profile/cpe-min
 	NAME:=Qualcomm Technologies Inc., Kobuk' CPE-MIN Profile
 	PACKAGES:=$(OPENWRT_STANDARD) \
 		$(COREBSP_UTILS) $(UTILS) \
-		$(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
-		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
-		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
-		$(QTIPERFPROP) \
-		$(QTIIPQ) $(QTIIPQPROP) \
-		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
-		$(QTIEMERGENCYALERTPROP) \
+		$(call qti_exclude_filter_all,$(QTIGROUPS_cpe-min),cpe-min) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig \
 		-iw-full
 endef
