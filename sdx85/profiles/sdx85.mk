@@ -184,8 +184,9 @@ define Profile/recovery
         NAME:=Qualcomm Technologies Inc., Recovery Profile
         PACKAGES:=$(OPENWRT_STANDARD) \
                 $(COREBSP_UTILS) $(UTILS) \
-                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTISENSORSPROP) \
-                -ipa_fws -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISENSORSPROP) \
+                $(call qti_exclude_filter,QTISSMGRPROP,recovery) \
+	        -ipa_fws -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
                 -usb-composition usb-composition-recovery -initmss -sign_abl applypatch bsdiff-ota edify \
                 libdivsufsort librecovery-updater-msm recovery updater -subsystem-ramdump -rproc-tracing -lftp -kpigen
 endef
