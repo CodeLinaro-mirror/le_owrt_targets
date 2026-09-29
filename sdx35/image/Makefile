@@ -27,20 +27,20 @@ ifeq ($(PROFILE),recovery)
 	IMAGE_ROOTFS = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/recovery/root-$(BOARD)
 else
 	IMAGE_ROOTFS = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-$(BOARD)
-ifeq ($(PROFILE),mbb)
+ifneq (,$(filter mbb iot,$(PROFILE)))
 	IMAGE_ROOTFS_AB = $(TOPDIR)/build_dir/$(TARGET_DIR_NAME)/root-$(BOARD)-ab
 endif
 endif
 
 ifeq ($(USER_VARIANT),1)
 	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)
-ifeq ($(PROFILE),mbb)
+ifneq (,$(filter mbb iot,$(PROFILE)))
 	IMAGE_PRODUCTS_DIR_AB = $(TOPDIR)/bin/targets/user/$(BOARD)/$(PROFILE)-ab
 endif
 
 else
 	IMAGE_PRODUCTS_DIR = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)
-ifeq ($(PROFILE),mbb)
+ifneq (,$(filter mbb iot,$(PROFILE)))
 	IMAGE_PRODUCTS_DIR_AB = $(TOPDIR)/bin/targets/$(TARGET_VARIANT)/$(BOARD)/$(PROFILE)-ab
 endif
 
@@ -146,7 +146,7 @@ define Image/Build/ubifs
 	$(CP) ./ubinize-sdx35-128m.cfg $(KDIR)
 	$(CP) ./ubinize-sdx35-128m-2k.cfg $(KDIR)
 	$(CP) ./ubinize-sdx35-m2-128m-2k.cfg $(KDIR)
-ifeq ($(PROFILE), mbb)
+ifneq (,$(filter mbb iot,$(PROFILE)))
 	$(call Image/AB/GenerateABRootfs)
 	$(CP) ./ubinize-sdx35-ab.cfg $(KDIR)
 	$(CP) ./ubinize-sdx35-ab-2k.cfg $(KDIR)
@@ -196,7 +196,7 @@ endif
 	  $(CP) $(KDIR)/ubinize-sdx35-2k.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	  $(CP) $(KDIR)/ubinize-sdx35-2k-squashfs.cfg $(IMAGE_PRODUCTS_DIR)/; \
 	)
-	( if [ "$(PROFILE)" == "mbb" ]; then \
+	( if [ "$(PROFILE)" == "mbb" ] || [ "$(PROFILE)" == "iot" ]; then \
 	(cd $(TOPDIR); \
 		./build_dir/host/sed-4.8/sed/sed -i 's/ubus:x:81:81:ubus:\/var\/run\/ubus:\/bin\/false//' $(IMAGE_ROOTFS_AB)/etc/passwd; \
 		rm -rf $(IMAGE_ROOTFS_AB)/etc/uci-defaults/13_fix-group-user; \
@@ -219,7 +219,7 @@ endif
 	$(call Ota/Build/releasetools-native)
 	$(call Ota/Build/ubi,2k)
 	$(call Ota/Build/ubi,4k)
-ifeq ($(PROFILE),mbb)
+ifneq (,$(filter mbb iot,$(PROFILE)))
 	$(call Ota/Build/ubi_ab,2k)
 	$(call Ota/Build/ubi_ab,4k)
 endif
@@ -253,7 +253,7 @@ define Image/Build/ext4
 		rm -rf boot.img.${TARGET_SHA_TYPE} boot.img.sig boot.img.sig.padded boot.img.nonsecure; \
 		mv -f boot.img.secure boot.img; \
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR); \
-		if [ "$(PROFILE)" == "mbb" ]; then \
+		if [ "$(PROFILE)" == "mbb" ] || [ "$(PROFILE)" == "iot" ]; then \
 		mkdir -p $(IMAGE_PRODUCTS_DIR_AB); \
 		$(CP) $(KDIR)/vmlinux $(IMAGE_PRODUCTS_DIR_AB); \
 		$(CP) $(KDIR)/boot.img $(IMAGE_PRODUCTS_DIR_AB); \
