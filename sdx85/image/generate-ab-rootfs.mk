@@ -35,6 +35,8 @@ define Image/AB/GenerateABRootfs
 		$(opkg_remove_cmd) remove $(pkg); \
 	)
 
+	find $(IMAGE_ROOTFS_AB)/etc/rc.d -maxdepth 1 -type l ! -exec test -e {} \; -delete
+
 	mkdir -p $(IMAGE_ROOTFS_AB)/var/lock
 
 	echo "Installing packages from ABPackages_Install in rootfs_ab"; \

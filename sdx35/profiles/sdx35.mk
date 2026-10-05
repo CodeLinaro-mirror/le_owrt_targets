@@ -1,5 +1,7 @@
 include $(TOPDIR)/owrt-qti-conf/sdx.mk
 include $(TOPDIR)/owrt-qti-ppat-prop/qtippatprop.mk
+-include $(TOPDIR)/owrt-qti-telsdk/qtitelsdk.mk
+-include $(TOPDIR)/owrt-qti-telsdk-prop/qtitelsdkprop.mk
 
 ifeq ($(CONFIG_OTA_RECOVERY_UPDATE),y)
 RECOVERYUPDATER=recovery-updater
@@ -107,6 +109,7 @@ define Profile/iot
 		$(QTIPPATPROP) \
 		$(QTIDATAINTERNAL) \
 		$(QTIAUDIO) $(QTIARGS) $(QTIPAL) $(QTIAGM) $(QTIAUDIOPROP) \
+		$(QTITELSDK) $(QTITELSDKPROP) \
 		-edk2 -mkbootimg -linux-msm-5.4_dt -lacpd bind bind-dig libtirpc subsystem-ramdump -swconfig $(RECOVERYUPDATER)
 endef
 

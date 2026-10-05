@@ -77,7 +77,6 @@ define Profile/cpe-min
 		$(QTICOREINTERNAL) $(QTISENSORSPROP) $(QTINTERNAL) \
 		$(QTIDATA) $(QTIDATAPROP) $(QTIDATAINTERNAL) \
 		$(QTIPERFPROP) \
-		$(QTITELSDK) $(QTITELSDKPROP) \
 		$(QTIIPQ) $(QTIIPQPROP) \
 		$(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) \
 		$(QTIEMERGENCYALERTPROP) \
@@ -184,7 +183,7 @@ define Profile/recovery
                 $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) $(QTISENSORSPROP) \
                 -ipa_fws -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -postboot \
                 -usb-composition usb-composition-recovery -initmss -sign_abl applypatch bsdiff-ota edify \
-                libdivsufsort librecovery-updater-msm recovery updater -rproc-tracing -lftp -kpigen
+                libdivsufsort librecovery-updater-msm recovery updater -subsystem-ramdump -rproc-tracing -lftp -kpigen
 endef
 
 define Profile/recovery/Description
