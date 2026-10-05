@@ -78,6 +78,25 @@ endef
 
 $(eval $(call Profile,cpe-v1))
 
+define Profile/cpe-v1-min
+        NAME:=Qualcomm Technologies Inc., Pinnacles' CPE-V1 Minimal Profile
+        PACKAGES:=$(OPENWRT_STANDARD) \
+                $(COREBSP_UTILS) $(UTILS) \
+                $(QTIBSP) $(QTIBSPPROP) $(QTICORE) $(QTICOREPROP) $(QTISSMGR) $(QTISSMGRPROP) \
+                $(QTIDATA) $(QTIDATAPROP) $(QTICTAINTERNAL) $(QTISSDK) \
+                $(QTIIPQ) $(QTIIPQPROP) \
+                $(QTILOCATION) $(QTILOCATIONPROP) $(QTILOCATIONINTERNAL) $(QTINTERNAL) \
+                $(QTICOREINTERNAL) $(QTISECURITY) $(QTISECURITYPROP) $(QTISECURITYINTERNAL) $(QTIDATAINTERNAL) $(QTISENSORSPROP) $(QTIMSDCPROP) \
+                -edk2 -mkbootimg -linux-msm-5.4_dt -lacpd libtirpc -swconfig -lftp $(RECOVERYUPDATER) -bind -bind-dig \
+                -iw-full
+endef
+
+define Profile/cpe-v1-min/Description
+        CPE-V1 Minimal sdx75 package set configuration.
+        Enables cpe-v1-min set of modules for sdx75 target.
+endef
+
+$(eval $(call Profile,cpe-v1-min))
 
 define Profile/mbb-min
         NAME:=Qualcomm Technologies Inc., Pinnacles' MBB Minimal Profile
