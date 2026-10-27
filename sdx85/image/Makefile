@@ -345,6 +345,9 @@ define Image/KeyGeneration
 (	if [ $(CONFIG_PACKAGE_encrypt-utils) == y ]; then \
 		sh ./generate_rootfs_key_blob.sh rootfs 64 "$(INITRAMFS_TARGET_DIR)" "$(SEC_PATH)" "$(SEC_PROFILE_PATH)" "$(PUBLIC_KEY)"; \
 	fi; \
+	if [ $(CONFIG_PACKAGE_secure-fscrypt) == y ]; then \
+		sh ./generate_rw_key_blob.sh rootfs 64 "$(IMAGE_ROOTFS)" "$(SEC_PATH)" "$(SEC_PROFILE_PATH)" "$(PUBLIC_KEY)"; \
+	fi; \
 )
 endef
 
@@ -409,6 +412,16 @@ endef
 
 ifeq ($(and $(wildcard $(RECOVERY_IMGS_PATH)/recoveryfs.img), $(wildcard $(RECOVERY_ROOTFS_PATH))),)
 define Ota/Build/ext4
+	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure recovery profile has been built!")
+endef
+endif
+
+# Guard the PRPL squashfs OTA path the same way as ext4 above: Ota/Build/emmc_squash
+# copies from $(RECOVERY_ROOTFS_PATH) (recovery/root-$(BOARD)), so if the recovery
+# profile has not been built that copy hard-fails. Override the macro at parse time
+# with a warning-only stub so a main-only build degrades gracefully instead of erroring.
+ifeq ($(wildcard $(RECOVERY_ROOTFS_PATH)),)
+define Ota/Build/emmc_squash
 	$(warning "WARNING: Preconditions for OTA Package generation not met. Please ensure recovery profile has been built!")
 endef
 endif
